@@ -31,14 +31,16 @@ papaw = executable('papaw',
                    c_args: cflags + ['-fvisibility=hidden', '-Wno-unused-function'],
                    link_args: ldflags)
 
-putser = executable('putser',
-                    'putser.c',
-                    c_args: cflags,
-                    link_args: ldflags)
+if not meson.is_cross_build()
+    putser = executable('putser',
+                        'putser.c',
+                        c_args: cflags,
+                        link_args: ldflags)
 
-test_putser = custom_target('test_putser',
-                            output : 'test_putser',
-                            input : putser,
-                            command : [join_paths(meson.source_root(), 'papawify'), papaw, '@INPUT@', '@OUTPUT@'],
-                            build_by_default: true,
-                            depends: papaw)
+    test_putser = custom_target('test_putser',
+                                output : 'test_putser',
+                                input : putser,
+                                command : [join_paths(meson.source_root(), 'papawify'), papaw, '@INPUT@', '@OUTPUT@'],
+                                build_by_default: true,
+                                depends: papaw)
+endif
