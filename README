@@ -7,9 +7,13 @@
 Overview
 ========
 
-papaw is a decompressing packer for executables running as root. It is designed
-to be portable across different kernel versions, therefore it avoids the use of
-fexecve() and other system calls which can be used to simplify it.
+papaw is a permissively-licensed packer for executables which contain statically
+linked, third-party components of various licenses and run as root on various
+devices, with limited disk space.
+
+It is designed to be portable across different devices, therefore it avoids
+machine-specific assembly and the use of fexecve() or other, newer system calls
+which could be used to simplify it.
 
 Usage
 =====
