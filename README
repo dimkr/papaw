@@ -1,0 +1,29 @@
+ _ __   __ _ _ __   __ ___      __
+| '_ \ / _` | '_ \ / _` \ \ /\ / /
+| |_) | (_| | |_) | (_| |\ V  V /
+| .__/ \__,_| .__/ \__,_| \_/\_/
+|_|         |_|
+
+Overview
+========
+
+papaw is a decompressing packer for executables running as root. It is designed
+to be portable across different kernel versions, therefore it avoids the use of
+fexecve() and other system calls which can be used to simplify it.
+
+Usage
+=====
+
+papaw uses Meson (http://mesonbuild.com/) as its build system. To pack an
+executable using papaw, build papaw, then use papawify to pack the executable.
+
+papaw can be used as a Meson subproject; in that case, custom_target() is the
+recommended way to run papawify.
+
+Legal Information
+=================
+
+papaw is free and unencumbered software released under the terms of the MIT
+license; see COPYING for the license text.
+
+The ASCII art logo at the top was made using FIGlet (http://www.figlet.org/).
