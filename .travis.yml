@@ -24,4 +24,4 @@ language: minimal
 
 services: docker
 
-script: docker run -w /root/papaw -v `pwd`:/root/papaw dimkr/c-dev:latest ./ci.sh
+script: docker run --privileged -w /root/papaw -v `pwd`:/root/papaw dimkr/c-dev:latest ./ci.sh
