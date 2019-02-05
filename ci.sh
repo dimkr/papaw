@@ -24,10 +24,8 @@
 
 meson build
 meson test -C build
-test "`./build/test_putser`" == hello
 
 . /opt/meson/bin/activate
 
 meson build-2
 meson test -C build-2
-test "`./build-2/test_putser`" == hello
