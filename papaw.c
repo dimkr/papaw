@@ -41,7 +41,7 @@
 
 #define MINIZ_NO_ARCHIVE_APIS
 #define MINIZ_NO_ZLIB_APIS
-#include "miniz.c"
+#include "miniz/miniz.c"
 
 #define XZ_EXTERN static
 #include "xz-embedded/linux/lib/xz/xz_dec_lzma2.c"

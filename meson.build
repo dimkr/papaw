@@ -26,7 +26,7 @@ cflags = ['-Os', '-fomit-frame-pointer', '-ffunction-sections', '-fdata-sections
 ldflags = ['-Wl,--gc-sections', '-Wl,--sort-common', '-Wl,-s']
 
 papaw = executable('papaw',
-                   'main.c',
+                   'papaw.c',
                    include_directories: [include_directories('xz-embedded/userspace'), include_directories('xz-embedded/linux/include/linux')],
                    c_args: cflags + ['-fvisibility=hidden', '-Wno-unused-function'],
                    link_args: ldflags)
@@ -42,4 +42,3 @@ test_putser = custom_target('test_putser',
                             command : [join_paths(meson.source_root(), 'papawify'), papaw, '@INPUT@', '@OUTPUT@'],
                             build_by_default: true,
                             depends: papaw)
-test('putser', find_program('./test_putser'))
