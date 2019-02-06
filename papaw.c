@@ -209,17 +209,29 @@ struct foot {
 int main(int argc, char *argv[])
 {
     struct stat stbuf;
-    static char dir[] = DIR_TEMPLATE, path[sizeof(dir) + 1 + NAME_MAX];
+    static char exe[PATH_MAX],
+                dir[] = DIR_TEMPLATE,
+                path[sizeof(dir) + 1 + NAME_MAX];
     int self;
     void *p;
-    size_t off;
     struct foot *lens;
+    size_t off;
+    ssize_t out;
     uint32_t clen, olen;
     bool ok;
     const char *prog;
 
+    /* store the packed executable path in an environment variable */
+    out = readlink("/proc/self/exe", exe, sizeof(exe));
+    if ((out <= 0) || (out >= sizeof(exe)))
+        return EXIT_FAILURE;
+    exe[out] = '\0';
+
+    if (setenv("   ", exe, 1) < 0)
+        return EXIT_FAILURE;
+
     /* map the executable to memory */
-    self = open("/proc/self/exe", O_RDONLY);
+    self = open(exe, O_RDONLY);
     if (self < 0)
         return EXIT_FAILURE;
 
