@@ -209,8 +209,7 @@ struct foot {
 int main(int argc, char *argv[])
 {
     struct stat stbuf;
-    static char dir[] = DIR_TEMPLATE,
-                path[sizeof(dir) + 1 + NAME_MAX] = DIR_TEMPLATE"/";
+    static char dir[] = DIR_TEMPLATE, path[sizeof(dir) + 1 + NAME_MAX];
     int self;
     void *p;
     size_t off;
@@ -274,6 +273,8 @@ int main(int argc, char *argv[])
     else
         prog = argv[0];
 
+    memcpy(path, dir, sizeof(dir) - 1);
+    path[sizeof(dir) - 1] = '/';
     strncpy(path + sizeof(dir), prog, sizeof(path) - sizeof(dir));
     path[sizeof(path) - 1] = '\0';
 
