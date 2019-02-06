@@ -30,7 +30,6 @@
 #include <sys/mman.h>
 #include <elf.h>
 #include <inttypes.h>
-#include <paths.h>
 #include <sys/mount.h>
 #include <limits.h>
 #include <arpa/inet.h>
@@ -47,7 +46,7 @@
 #include "xz-embedded/linux/lib/xz/xz_dec_lzma2.c"
 #include "xz-embedded/linux/lib/xz/xz_dec_stream.c"
 
-#define DIR_TEMPLATE _PATH_TMP".packXXXXXX"
+#define DIR_TEMPLATE PAPAW_PREFIX".XXXXXX"
 
 static uint32_t xz_crc32(const uint8_t *buf, size_t size, uint32_t crc)
 {

@@ -28,7 +28,7 @@ ldflags = ['-Wl,--gc-sections', '-Wl,--sort-common', '-Wl,-s']
 papaw = executable('papaw',
                    'papaw.c',
                    include_directories: [include_directories('xz-embedded/userspace'), include_directories('xz-embedded/linux/include/linux')],
-                   c_args: cflags + ['-fvisibility=hidden', '-Wno-unused-function'],
+                   c_args: cflags + ['-fvisibility=hidden', '-Wno-unused-function', '-DPAPAW_PREFIX="@0@"'.format(get_option('dir_prefix'))],
                    link_args: ldflags)
 
 if not meson.is_cross_build()
