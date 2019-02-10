@@ -178,10 +178,14 @@ static bool start_unmounter(const char *dir, const char *path)
 
     /* reap the child */
     reaped = waitpid(pid, &status, 0);
-    if (((reaped < 0) && (errno != ECHILD)) ||
-        (reaped != pid) ||
-        !WIFEXITED(status) ||
-        (WEXITSTATUS(status) != EXIT_SUCCESS)) {
+    if (reaped < 0) {
+        if (errno != ECHILD) {
+            close(pfds[1]);
+            return false;
+        }
+    } else if ((reaped != pid) ||
+               !WIFEXITED(status) ||
+               (WEXITSTATUS(status) != EXIT_SUCCESS)) {
         close(pfds[1]);
         return false;
     }
