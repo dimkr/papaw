@@ -122,7 +122,7 @@ static bool start_unmounter(const char *dir, const char *path)
     sigset_t set, oset;
     ssize_t out;
     int pfds[2], status;
-    pid_t pid;
+    pid_t pid, reaped;
 
     /* block SIGCHLD */
     if ((sigemptyset(&set) < 0) ||
@@ -177,7 +177,9 @@ static bool start_unmounter(const char *dir, const char *path)
     close(pfds[0]);
 
     /* reap the child */
-    if ((waitpid(pid, &status, 0) != pid) ||
+    reaped = waitpid(pid, &status, 0);
+    if (((reaped < 0) && (errno != ECHILD)) ||
+        (reaped != pid) ||
         !WIFEXITED(status) ||
         (WEXITSTATUS(status) != EXIT_SUCCESS)) {
         close(pfds[1]);
