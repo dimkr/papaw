@@ -31,7 +31,7 @@ papaw = executable('papaw',
                    c_args: cflags + ['-fvisibility=hidden', '-Wno-unused-function', '-DPAPAW_PREFIX="@0@"'.format(get_option('dir_prefix'))],
                    link_args: ldflags)
 
-if not meson.is_cross_build()
+if not meson.is_cross_build() and not meson.is_subproject()
     putser = executable('putser',
                         'putser.c',
                         c_args: cflags,
