@@ -46,7 +46,7 @@
 #include "xz-embedded/linux/lib/xz/xz_dec_lzma2.c"
 #include "xz-embedded/linux/lib/xz/xz_dec_stream.c"
 
-#define DIR_TEMPLATE PAPAW_PREFIX".XXXXXX"
+#define DIR_TEMPLATE PAPAW_PREFIX"/.XXXXXX"
 
 static uint32_t xz_crc32(const uint8_t *buf, size_t size, uint32_t crc)
 {
