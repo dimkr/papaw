@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
               "tmpfs",
               MS_NOATIME | MS_NODIRATIME | MS_NODEV,
               NULL) < 0) {
-        unlink(dir);
+        rmdir(dir);
         munmap(p, (size_t)stbuf.st_size);
         close(self);
         return EXIT_FAILURE;
