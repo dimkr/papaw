@@ -116,7 +116,7 @@ static bool extract(const char *path,
     return true;
 }
 
-static bool start_unmounter(const char *dir, const char *path)
+static bool start_unmounter(const char *dir, const char *path, const uid_t uid)
 {
     struct timespec ts = {.tv_sec = 0, .tv_nsec = 0};
     sigset_t set, oset;
@@ -163,8 +163,14 @@ static bool start_unmounter(const char *dir, const char *path)
         out = read(pfds[0], &status, sizeof(status));
 
         /* lazily unmount the tmpfs */
-        if (umount2(dir, MNT_DETACH) == 0)
-            rmdir(dir);
+        if (uid == 0) {
+            if (umount2(dir, MNT_DETACH) == 0)
+                rmdir(dir);
+        }
+        else {
+            if (unlink(path) == 0)
+                rmdir(dir);
+        }
 
         if (out < 0)
             _exit(EXIT_FAILURE);
@@ -226,6 +232,7 @@ int main(int argc, char *argv[])
     uint32_t clen, olen;
     bool ok;
     const char *prog;
+    uid_t uid;
 
     /* store the packed executable path in an environment variable */
     out = readlink("/proc/self/exe", exe, sizeof(exe));
@@ -274,11 +281,13 @@ int main(int argc, char *argv[])
     }
 
     /* mount a tmpfs on it */
-    if (mount(NULL,
-              dir,
-              "tmpfs",
-              MS_NOATIME | MS_NODIRATIME | MS_NODEV,
-              NULL) < 0) {
+    uid = geteuid();
+    if ((uid == 0) &&
+        (mount(NULL,
+               dir,
+               "tmpfs",
+               MS_NOATIME | MS_NODIRATIME | MS_NODEV,
+               NULL) < 0)) {
         rmdir(dir);
         munmap(p, (size_t)stbuf.st_size);
         close(self);
@@ -303,15 +312,15 @@ int main(int argc, char *argv[])
     close(self);
 
     if (!ok) {
-        if (umount2(dir, MNT_DETACH) == 0)
+        if ((uid != 0) || (umount2(dir, MNT_DETACH) == 0))
             rmdir(dir);
         return EXIT_FAILURE;
     }
 
     /* spawn a process that will lazily unmount the tmpfs after execv() */
-    if (!start_unmounter(dir, path)) {
+    if (!start_unmounter(dir, path, uid)) {
         unlink(path);
-        if (umount2(dir, MNT_DETACH) == 0)
+        if ((uid != 0) || (umount2(dir, MNT_DETACH) == 0))
             rmdir(dir);
         return EXIT_FAILURE;
     }

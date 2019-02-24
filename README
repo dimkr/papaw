@@ -8,8 +8,8 @@ Overview
 ========
 
 papaw is a permissively-licensed packer for executables which contain statically
-linked, third-party components of various licenses and run as root on various
-devices, with limited disk space.
+linked, third-party components of various licenses and run on various devices,
+with limited disk space.
 
 It is designed to be portable across different devices, therefore it avoids
 machine-specific assembly and the use of fexecve() or other, newer system calls
@@ -22,8 +22,9 @@ papaw consists of a small executable (~15-20K) containing XZ Embedded
 (https://tukaani.org/xz/embedded.html). It extracts a LZMA2-compressed
 executable appended to it by the papawify script.
 
-The payload executable is extracted to a tmpfs file system that is lazily
-unmounted once it starts running.
+The payload executable is extracted to a temporary file that is deleted once it
+starts running. When running as root, this is done by mounting a tmpfs file
+system and lazily unmounting it.
 
 Usage
 =====
