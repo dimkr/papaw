@@ -28,7 +28,6 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <sys/mman.h>
-#include <elf.h>
 #include <inttypes.h>
 #include <sys/mount.h>
 #include <limits.h>
