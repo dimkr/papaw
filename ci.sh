@@ -23,9 +23,11 @@
 # SOFTWARE.
 
 meson build
-meson test -C build
+ninja -C build
+test x`./build/test_putser` = xhello
 
 . /opt/meson/bin/activate
 
 meson build-2
-meson test -C build-2
+ninja -C build-2
+test x`./build-2/test_putser` = xhello
