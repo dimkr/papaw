@@ -25,6 +25,10 @@ project('papaw', 'c', version: '0.1', license: 'MIT')
 cflags = ['-Os', '-fomit-frame-pointer', '-ffunction-sections', '-fdata-sections', '-fmerge-all-constants']
 ldflags = ['-Wl,--gc-sections', '-Wl,--sort-common', '-Wl,-s']
 
+if meson.get_compiler('c').has_argument('-Wno-tautological-constant-out-of-range-compare')
+    cflags += ['-Wno-tautological-constant-out-of-range-compare']
+endif
+
 papaw = executable('papaw',
                    'papaw.c',
                    include_directories: [include_directories('xz-embedded/userspace'), include_directories('xz-embedded/linux/include/linux')],
