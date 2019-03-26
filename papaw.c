@@ -36,6 +36,9 @@
 #include <sys/wait.h>
 #include <stdbool.h>
 #include <errno.h>
+#ifndef PAPAW_ALLOW_COREDUMPS
+#   include <sys/resource.h>
+#endif
 
 #define MINIZ_NO_ARCHIVE_APIS
 #define MINIZ_NO_ZLIB_APIS
@@ -223,6 +226,9 @@ int main(int argc, char *argv[])
     static char exe[PATH_MAX],
                 dir[] = DIR_TEMPLATE,
                 path[sizeof(dir) + 1 + NAME_MAX];
+#ifndef PAPAW_ALLOW_COREDUMPS
+    struct rlimit lim;
+#endif
     int self;
     void *p;
     struct foot *lens;
@@ -232,6 +238,21 @@ int main(int argc, char *argv[])
     bool ok;
     const char *prog;
     uid_t uid;
+
+#ifndef PAPAW_ALLOW_COREDUMPS
+    /*
+     * disable generation of coredumps: it's easy to intentionally corrupt the
+     * payload of a packed executable to trigger a segfault, then extract the
+     * decompressed executable from the coredump; the payload can re-enable
+     * coredumps if desired
+     */
+    if (getrlimit(RLIMIT_CORE, &lim) < 0)
+        return false;
+
+    lim.rlim_cur = 0;
+    if (setrlimit(RLIMIT_CORE, &lim) < 0)
+        return false;
+#endif
 
     /* store the packed executable path in an environment variable */
     out = readlink("/proc/self/exe", exe, sizeof(exe));

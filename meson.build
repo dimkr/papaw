@@ -29,10 +29,17 @@ if meson.get_compiler('c').has_argument('-Wno-tautological-constant-out-of-range
     cflags += ['-Wno-tautological-constant-out-of-range-compare']
 endif
 
+config_cflags = [
+    '-DPAPAW_PREFIX="@0@"'.format(get_option('dir_prefix'))
+]
+if get_option('allow_coredumps')
+    config_cflags += ['-DPAPAW_ALLOW_COREDUMPS']
+endif
+
 papaw = executable('papaw',
                    'papaw.c',
                    include_directories: [include_directories('xz-embedded/userspace'), include_directories('xz-embedded/linux/include/linux')],
-                   c_args: cflags + ['-fvisibility=hidden', '-Wno-unused-function', '-DPAPAW_PREFIX="@0@"'.format(get_option('dir_prefix'))],
+                   c_args: cflags + ['-fvisibility=hidden', '-Wno-unused-function'] + config_cflags,
                    link_args: ldflags)
 
 if not meson.is_cross_build() and not meson.is_subproject()
