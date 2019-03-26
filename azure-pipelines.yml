@@ -27,5 +27,8 @@ variables:
   imageName: dimkr/c-dev:latest
 
 steps:
+- checkout: self
+  fetchDepth: 1
+  submodules: true
 - script: docker run -w /root/papaw -v `pwd`:/root/papaw $(imageName) ./ci.sh
   displayName: 'CI script'
