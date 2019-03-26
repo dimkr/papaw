@@ -32,8 +32,13 @@ endif
 config_cflags = [
     '-DPAPAW_PREFIX="@0@"'.format(get_option('dir_prefix'))
 ]
+
 if get_option('allow_coredumps')
     config_cflags += ['-DPAPAW_ALLOW_COREDUMPS']
+endif
+
+if get_option('allow_ptrace')
+    config_cflags += ['-DPAPAW_ALLOW_PTRACE']
 endif
 
 papaw = executable('papaw',

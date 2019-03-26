@@ -39,6 +39,9 @@
 #ifndef PAPAW_ALLOW_COREDUMPS
 #   include <sys/resource.h>
 #endif
+#ifndef PAPAW_ALLOW_PTRACE
+#   include <sys/ptrace.h>
+#endif
 
 #define MINIZ_NO_ARCHIVE_APIS
 #define MINIZ_NO_ZLIB_APIS
@@ -117,6 +120,9 @@ static bool start_unmounter(const char *dir, const char *path, const uid_t uid)
     ssize_t out;
     int pfds[2], status;
     pid_t pid, reaped;
+#ifndef PAPAW_ALLOW_PTRACE
+    pid_t ppid = -1;
+#endif
 
     /* block SIGCHLD */
     if ((sigemptyset(&set) < 0) ||
@@ -140,10 +146,28 @@ static bool start_unmounter(const char *dir, const char *path, const uid_t uid)
         return false;
     }
 
-    /* daemonize the child */
     if (pid == 0) {
         close(pfds[1]);
 
+#ifndef PAPAW_ALLOW_PTRACE
+        if (uid == 0) {
+            ppid = getppid();
+
+            /*
+             * make sure no debugger is attached to the parent during the
+             * writing and the execution of the the payload; if we can't attach,
+             * the parent won't write the payload
+             */
+            if ((ptrace(PTRACE_ATTACH, ppid) < 0) && (errno == EPERM))
+                _exit(EXIT_FAILURE);
+
+            /* resume the parent */
+            if (kill(ppid, SIGCONT) < 0)
+                _exit(EXIT_FAILURE);
+        }
+#endif
+
+        /* daemonize the child */
         if (setsid() < 0)
             _exit(EXIT_FAILURE);
 
@@ -160,6 +184,10 @@ static bool start_unmounter(const char *dir, const char *path, const uid_t uid)
         if (uid == 0) {
             if (umount2(dir, MNT_DETACH) == 0)
                 rmdir(dir);
+
+#ifndef PAPAW_ALLOW_PTRACE
+            ptrace(PTRACE_DETACH, ppid);
+#endif
         }
         else {
             if (unlink(path) == 0)
