@@ -304,6 +304,15 @@ int main(int argc, char *argv[])
     strncpy(path + sizeof(dir), prog, sizeof(path) - sizeof(dir));
     path[sizeof(path) - 1] = '\0';
 
+    /* spawn a process that will lazily unmount the tmpfs after execv() */
+    if (!start_unmounter(dir, path, uid)) {
+        if ((uid != 0) || (umount2(dir, MNT_DETACH) == 0))
+            rmdir(dir);
+        munmap(p, (size_t)stbuf.st_size);
+        close(self);
+        return EXIT_FAILURE;
+    }
+
     /* decompress and extract the executable to the tmpfs */
     ok = extract(path, clen, p + off - clen, olen);
 
@@ -311,14 +320,6 @@ int main(int argc, char *argv[])
     close(self);
 
     if (!ok) {
-        if ((uid != 0) || (umount2(dir, MNT_DETACH) == 0))
-            rmdir(dir);
-        return EXIT_FAILURE;
-    }
-
-    /* spawn a process that will lazily unmount the tmpfs after execv() */
-    if (!start_unmounter(dir, path, uid)) {
-        unlink(path);
         if ((uid != 0) || (umount2(dir, MNT_DETACH) == 0))
             rmdir(dir);
         return EXIT_FAILURE;
