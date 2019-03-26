@@ -11,6 +11,11 @@ papaw is a permissively-licensed packer for executables which contain statically
 linked, third-party components of various licenses and run on various devices,
 with limited disk space.
 
+papaw reduces the size of executables and makes executables capable of replacing
+themselves on disk, while optionally providing very basic anti-debugging
+protection to discourage those attempting some trivial reverse-engineering
+techniques.
+
 It is designed to be portable across different devices, therefore it avoids
 machine-specific assembly and the use of fexecve() or other, newer system calls
 which could be used to simplify it.

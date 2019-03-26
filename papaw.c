@@ -36,6 +36,12 @@
 #include <sys/wait.h>
 #include <stdbool.h>
 #include <errno.h>
+#ifndef PAPAW_ALLOW_COREDUMPS
+#   include <sys/resource.h>
+#endif
+#ifndef PAPAW_ALLOW_PTRACE
+#   include <sys/ptrace.h>
+#endif
 
 #define MINIZ_NO_ARCHIVE_APIS
 #define MINIZ_NO_ZLIB_APIS
@@ -58,60 +64,52 @@ static bool extract(const char *path,
                     const uint32_t olen)
 {
     struct xz_buf xzbuf;
-    unsigned char *buf, *p;
     struct xz_dec *xz;
-    ssize_t now;
-    uint32_t rem;
     int out;
 
-    buf = malloc(olen);
-    if (!buf)
+    out = open(path, O_CREAT | O_RDWR, 0755);
+    if (out < 0)
         return false;
+
+    if (ftruncate(out, (off_t)olen) < 0) {
+        close(out);
+        unlink(path);
+        return false;
+    }
+
+    xzbuf.out = mmap(NULL, (size_t)olen, PROT_WRITE, MAP_SHARED, out, 0);
+    if (xzbuf.out == MAP_FAILED) {
+        close(out);
+        unlink(path);
+        return false;
+    }
 
     xzbuf.in = data;
     xzbuf.in_pos = 0;
     xzbuf.in_size = clen;
-    xzbuf.out = buf;
     xzbuf.out_pos = 0;
     xzbuf.out_size = olen;
 
     xz = xz_dec_init(XZ_SINGLE, 0);
     if (!xz) {
-        free(buf);
+        munmap(xzbuf.out, (size_t)olen);
+        close(out);
+        unlink(path);
         return false;
     }
 
     if ((xz_dec_run(xz, &xzbuf) != XZ_STREAM_END) || (xzbuf.out_size != olen)) {
         xz_dec_end(xz);
-        free(buf);
+        munmap(xzbuf.out, (size_t)olen);
+        close(out);
+        unlink(path);
         return false;
     }
 
     xz_dec_end(xz);
-
-    out = open(path, O_CREAT | O_RDWR, 0755);
-    if (out < 0) {
-        free(buf);
-        return false;
-    }
-
-    p = xzbuf.out;
-    rem = xzbuf.out_size;
-    do {
-        now = write(out, p, rem);
-        if (now < 0) {
-            close(out);
-            unlink(path);
-            free(buf);
-            return false;
-        }
-
-        p += now;
-        rem -= now;
-    } while (rem > 0);
-
+    munmap(xzbuf.out, (size_t)olen);
     close(out);
-    free(buf);
+
     return true;
 }
 
@@ -122,6 +120,9 @@ static bool start_unmounter(const char *dir, const char *path, const uid_t uid)
     ssize_t out;
     int pfds[2], status;
     pid_t pid, reaped;
+#ifndef PAPAW_ALLOW_PTRACE
+    pid_t ppid = -1;
+#endif
 
     /* block SIGCHLD */
     if ((sigemptyset(&set) < 0) ||
@@ -145,10 +146,28 @@ static bool start_unmounter(const char *dir, const char *path, const uid_t uid)
         return false;
     }
 
-    /* daemonize the child */
     if (pid == 0) {
         close(pfds[1]);
 
+#ifndef PAPAW_ALLOW_PTRACE
+        if (uid == 0) {
+            ppid = getppid();
+
+            /*
+             * make sure no debugger is attached to the parent during the
+             * writing and the execution of the the payload; if we can't attach,
+             * the parent won't write the payload
+             */
+            if ((ptrace(PTRACE_ATTACH, ppid) < 0) && (errno == EPERM))
+                _exit(EXIT_FAILURE);
+
+            /* resume the parent */
+            if (kill(ppid, SIGCONT) < 0)
+                _exit(EXIT_FAILURE);
+        }
+#endif
+
+        /* daemonize the child */
         if (setsid() < 0)
             _exit(EXIT_FAILURE);
 
@@ -165,6 +184,10 @@ static bool start_unmounter(const char *dir, const char *path, const uid_t uid)
         if (uid == 0) {
             if (umount2(dir, MNT_DETACH) == 0)
                 rmdir(dir);
+
+#ifndef PAPAW_ALLOW_PTRACE
+            ptrace(PTRACE_DETACH, ppid);
+#endif
         }
         else {
             if (unlink(path) == 0)
@@ -223,6 +246,9 @@ int main(int argc, char *argv[])
     static char exe[PATH_MAX],
                 dir[] = DIR_TEMPLATE,
                 path[sizeof(dir) + 1 + NAME_MAX];
+#ifndef PAPAW_ALLOW_COREDUMPS
+    struct rlimit lim;
+#endif
     int self;
     void *p;
     struct foot *lens;
@@ -232,6 +258,21 @@ int main(int argc, char *argv[])
     bool ok;
     const char *prog;
     uid_t uid;
+
+#ifndef PAPAW_ALLOW_COREDUMPS
+    /*
+     * disable generation of coredumps: it's easy to intentionally corrupt the
+     * payload of a packed executable to trigger a segfault, then extract the
+     * decompressed executable from the coredump; the payload can re-enable
+     * coredumps if desired
+     */
+    if (getrlimit(RLIMIT_CORE, &lim) < 0)
+        return false;
+
+    lim.rlim_cur = 0;
+    if (setrlimit(RLIMIT_CORE, &lim) < 0)
+        return false;
+#endif
 
     /* store the packed executable path in an environment variable */
     out = readlink("/proc/self/exe", exe, sizeof(exe));
@@ -304,6 +345,15 @@ int main(int argc, char *argv[])
     strncpy(path + sizeof(dir), prog, sizeof(path) - sizeof(dir));
     path[sizeof(path) - 1] = '\0';
 
+    /* spawn a process that will lazily unmount the tmpfs after execv() */
+    if (!start_unmounter(dir, path, uid)) {
+        if ((uid != 0) || (umount2(dir, MNT_DETACH) == 0))
+            rmdir(dir);
+        munmap(p, (size_t)stbuf.st_size);
+        close(self);
+        return EXIT_FAILURE;
+    }
+
     /* decompress and extract the executable to the tmpfs */
     ok = extract(path, clen, p + off - clen, olen);
 
@@ -311,14 +361,6 @@ int main(int argc, char *argv[])
     close(self);
 
     if (!ok) {
-        if ((uid != 0) || (umount2(dir, MNT_DETACH) == 0))
-            rmdir(dir);
-        return EXIT_FAILURE;
-    }
-
-    /* spawn a process that will lazily unmount the tmpfs after execv() */
-    if (!start_unmounter(dir, path, uid)) {
-        unlink(path);
         if ((uid != 0) || (umount2(dir, MNT_DETACH) == 0))
             rmdir(dir);
         return EXIT_FAILURE;
