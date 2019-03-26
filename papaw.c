@@ -61,60 +61,52 @@ static bool extract(const char *path,
                     const uint32_t olen)
 {
     struct xz_buf xzbuf;
-    unsigned char *buf, *p;
     struct xz_dec *xz;
-    ssize_t now;
-    uint32_t rem;
     int out;
 
-    buf = malloc(olen);
-    if (!buf)
+    out = open(path, O_CREAT | O_RDWR, 0755);
+    if (out < 0)
         return false;
+
+    if (ftruncate(out, (off_t)olen) < 0) {
+        close(out);
+        unlink(path);
+        return false;
+    }
+
+    xzbuf.out = mmap(NULL, (size_t)olen, PROT_WRITE, MAP_SHARED, out, 0);
+    if (xzbuf.out == MAP_FAILED) {
+        close(out);
+        unlink(path);
+        return false;
+    }
 
     xzbuf.in = data;
     xzbuf.in_pos = 0;
     xzbuf.in_size = clen;
-    xzbuf.out = buf;
     xzbuf.out_pos = 0;
     xzbuf.out_size = olen;
 
     xz = xz_dec_init(XZ_SINGLE, 0);
     if (!xz) {
-        free(buf);
+        munmap(xzbuf.out, (size_t)olen);
+        close(out);
+        unlink(path);
         return false;
     }
 
     if ((xz_dec_run(xz, &xzbuf) != XZ_STREAM_END) || (xzbuf.out_size != olen)) {
         xz_dec_end(xz);
-        free(buf);
+        munmap(xzbuf.out, (size_t)olen);
+        close(out);
+        unlink(path);
         return false;
     }
 
     xz_dec_end(xz);
-
-    out = open(path, O_CREAT | O_RDWR, 0755);
-    if (out < 0) {
-        free(buf);
-        return false;
-    }
-
-    p = xzbuf.out;
-    rem = xzbuf.out_size;
-    do {
-        now = write(out, p, rem);
-        if (now < 0) {
-            close(out);
-            unlink(path);
-            free(buf);
-            return false;
-        }
-
-        p += now;
-        rem -= now;
-    } while (rem > 0);
-
+    munmap(xzbuf.out, (size_t)olen);
     close(out);
-    free(buf);
+
     return true;
 }
 
