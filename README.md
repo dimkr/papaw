@@ -6,6 +6,8 @@
 |_|         |_|
 ```
 
+[![Build Status](https://dev.azure.com/dima0260/papaw/_apis/build/status/dimkr.papaw?branchName=master)](https://dev.azure.com/dima0260/papaw/_build)
+
 ## Overview
 
 papaw is a permissively-licensed packer for executables which contain statically linked, third-party components of various licenses and run on various devices, with limited disk space.
