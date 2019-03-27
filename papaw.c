@@ -283,6 +283,29 @@ int main(int argc, char *argv[])
     if (setenv("   ", exe, 1) < 0)
         return EXIT_FAILURE;
 
+    /* create a directory */
+    if (!mkdtemp(dir))
+        return EXIT_FAILURE;
+
+    prog = strrchr(argv[0], '/');
+    if (prog)
+        ++prog;
+    else
+        prog = argv[0];
+
+    memcpy(path, dir, sizeof(dir) - 1);
+    path[sizeof(dir) - 1] = '/';
+    strncpy(path + sizeof(dir), prog, sizeof(path) - sizeof(dir));
+    path[sizeof(path) - 1] = '\0';
+
+    uid = geteuid();
+
+    /* spawn a process that will lazily unmount the tmpfs after execv() */
+    if (!start_unmounter(dir, path, uid)) {
+        rmdir(dir);
+        return EXIT_FAILURE;
+    }
+
     /* map the executable to memory */
     self = open(exe, O_RDONLY);
     if (self < 0)
@@ -313,15 +336,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    /* create a directory */
-    if (!mkdtemp(dir)) {
-        munmap(p, (size_t)stbuf.st_size);
-        close(self);
-        return EXIT_FAILURE;
-    }
-
     /* mount a tmpfs on it */
-    uid = geteuid();
     if ((uid == 0) &&
         (mount(NULL,
                dir,
@@ -329,26 +344,6 @@ int main(int argc, char *argv[])
                MS_NOATIME | MS_NODIRATIME | MS_NODEV,
                NULL) < 0)) {
         rmdir(dir);
-        munmap(p, (size_t)stbuf.st_size);
-        close(self);
-        return EXIT_FAILURE;
-    }
-
-    prog = strrchr(argv[0], '/');
-    if (prog)
-        ++prog;
-    else
-        prog = argv[0];
-
-    memcpy(path, dir, sizeof(dir) - 1);
-    path[sizeof(dir) - 1] = '/';
-    strncpy(path + sizeof(dir), prog, sizeof(path) - sizeof(dir));
-    path[sizeof(path) - 1] = '\0';
-
-    /* spawn a process that will lazily unmount the tmpfs after execv() */
-    if (!start_unmounter(dir, path, uid)) {
-        if ((uid != 0) || (umount2(dir, MNT_DETACH) == 0))
-            rmdir(dir);
         munmap(p, (size_t)stbuf.st_size);
         close(self);
         return EXIT_FAILURE;

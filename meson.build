@@ -66,4 +66,16 @@ if not meson.is_cross_build() and not meson.is_subproject()
                                 command : [join_paths(meson.source_root(), 'papawify'), papaw, '@INPUT@', '@OUTPUT@'],
                                 build_by_default: true,
                                 depends: papaw)
+
+    crasher = executable('crasher',
+                         'crasher.c',
+                         c_args: cflags,
+                         link_args: ldflags)
+
+    test_crasher = custom_target('test_crasher',
+                                 output : 'test_crasher',
+                                 input : crasher,
+                                 command : [join_paths(meson.source_root(), 'papawify'), papaw, '@INPUT@', '@OUTPUT@'],
+                                 build_by_default: true,
+                                 depends: papaw)
 endif

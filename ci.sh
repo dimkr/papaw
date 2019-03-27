@@ -22,12 +22,46 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-meson build
-ninja -C build
-test x`./build/test_putser` = xhello
+# build with the oldest version of Meson we support
+CC=gcc-8 meson build-old
+ninja -C build-old
 
+test x`./build-old/test_putser` = xhello
+
+# packed executables should exit when attached with ptrace()
+test -n "`strace ./build-old/test_putser 2>&1 | grep 'WEXITSTATUS(s) == 1'`"
+
+# packed executables should not exit if traced but allow_ptrace=true
+meson configure build-old -Dallow_ptrace=true
+ninja -C build-old
+test x`./build-old/test_putser` = xhello
+
+# packed executables don't generate coredumps by default
+echo /tmp/core > /proc/sys/kernel/core_pattern
+test x`./build-old/test_crasher` = x
+test -z "`ls /tmp/core* 2>/dev/null`"
+
+# packed executables should generate coredumps when allow_coredumps=true
+meson configure build-old -Dallow_coredumps=true
+ninja -C build-old
+test x`./build-old/test_crasher` = x
+test -n "`ls /tmp/core*`"
+
+# the payload should be extracted to dir_prefix
+here=`pwd`
+meson configure build-old -Ddir_prefix=$here
+ninja -C build-old
+test -n "`strace -qqe mkdir ./build-old/test_putser 2>&1 | grep $here`"
+
+# make sure there are no file descriptor leaks
+valgrind -q --leak-check=full --error-exitcode=1 --malloc-fill=1 --free-fill=1 --track-fds=yes ./build-old/test_putser
+
+# build with clang 8 and ASan
+CC=clang-8 meson build-clang -Db_sanitize=address
+ninja -C build-clang
+./build-clang/test_putser
+
+# build with the latest version of Meson
 . /opt/meson/bin/activate
-
-meson build-2
-ninja -C build-2
-test x`./build-2/test_putser` = xhello
+meson build-latest
+ninja -C build-latest
