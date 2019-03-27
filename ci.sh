@@ -40,6 +40,7 @@ test -z "`ls /tmp/core* 2>/dev/null`"
 # executable
 ./build-old/test_sleeper &
 pid=$!
+sleep 1
 test -z "`grep test_sleeper /proc/$pid/maps`"
 test ! -s /proc/$pid/exe
 
@@ -64,9 +65,15 @@ test -n "`strace -qqe mkdir ./build-old/test_putser 2>&1 | grep $here`"
 valgrind -q --leak-check=full --error-exitcode=1 --malloc-fill=1 --free-fill=1 --track-fds=yes ./build-old/test_putser
 
 # build with clang 8 and ASan
-CC=clang-8 meson build-clang -Db_sanitize=address
+CC=clang-8 meson build-clang
 ninja -C build-clang
+test x`./build-clang/test_putser` = xhello
+meson configure build-clang -Db_sanitize=address
 ./build-clang/test_putser
+
+# make sure things still work when submodules are updated
+git submodule update --remote --recursive
+test x`./build-old/test_putser` = xhello
 
 # build with the latest version of Meson
 . /opt/meson/bin/activate
