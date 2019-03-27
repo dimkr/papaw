@@ -37,30 +37,51 @@
 
 void papaw_hide_exe(void)
 {
-    static char buf[192];
-    const char *path;
+    static char buf[192], path[128];
+    const char *self, *selfbase, *pathbase;
     void *copy;
     FILE *fp;
-    unsigned long start, end, offset, len;
+    unsigned long start, end, len;
     int prot;
-    char r, w, x, p, slash;
-    bool remapped = true;
-    unsigned int i;
+    char r, w, x, p;
+    bool found = false, remapped = true;
 
-    path = getenv("   ");
-    if (!path)
+    self = getenv("   ");
+    if (!self)
         return;
+
+    /*
+     * when the tmpfs is unmounted, /proc/self/exe points to /x for /tmp/x, so
+     * we compare only the file name when we look for mapped regions of the
+     * executable
+     */
+    selfbase = strrchr(self, '/');
+    if (!selfbase)
+        return;
+    ++selfbase;
 
     fp = fopen("/proc/self/maps", "r");
     if (!fp)
         return;
 
-    /* assumption: /proc/self/exe has only 3 mappings and they are the first */
-    for (i = 0; (i < 3) && fgets(buf, sizeof(buf), fp); ++i) {
-        if ((sscanf(buf, "%lx-%lx %c%c%c%c %lx %*x:%*x %*u %c", &start, &end, &r, &w, &x, &p, &offset, &slash) != 8) ||
-            (p != 'p') ||
-            (slash != '/'))
+    while (fgets(buf, sizeof(buf), fp)) {
+        if ((sscanf(buf,
+                    "%lx-%lx %c%c%c%c %*x %*x:%*x %*u %128s",
+                    &start, &end,
+                    &r, &w, &x, &p,
+                    path) != 7) ||
+            (p != 'p'))
             continue;
+
+        pathbase = strrchr(path, '/');
+        if (!pathbase)
+            continue;
+
+        ++pathbase;
+        if (strcmp(pathbase, selfbase))
+            continue;
+
+        found = true;
 
         len = end - start;
 
@@ -101,6 +122,6 @@ void papaw_hide_exe(void)
 
     fclose(fp);
 
-    if (remapped)
+    if (found && remapped)
         truncate("/proc/self/exe", 0);
 }

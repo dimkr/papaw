@@ -78,4 +78,17 @@ if not meson.is_cross_build() and not meson.is_subproject()
                                  command : [join_paths(meson.source_root(), 'papawify'), papaw, '@INPUT@', '@OUTPUT@'],
                                  build_by_default: true,
                                  depends: papaw)
+
+    sleeper = executable('sleeper',
+                         'sleeper.c',
+                         c_args: cflags,
+                         link_args: ldflags,
+                         link_with: libpapaw)
+
+    test_sleeper = custom_target('test_sleeper',
+                                 output : 'test_sleeper',
+                                 input : sleeper,
+                                 command : [join_paths(meson.source_root(), 'papawify'), papaw, '@INPUT@', '@OUTPUT@'],
+                                 build_by_default: true,
+                                 depends: papaw)
 endif

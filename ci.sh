@@ -31,17 +31,24 @@ test x`./build-old/test_putser` = xhello
 # packed executables should exit when attached with ptrace()
 test -n "`strace ./build-old/test_putser 2>&1 | grep 'WEXITSTATUS(s) == 1'`"
 
-# packed executables should not exit if traced but allow_ptrace=true
-meson configure build-old -Dallow_ptrace=true
-ninja -C build-old
-test x`./build-old/test_putser` = xhello
-
 # packed executables don't generate coredumps by default
 echo /tmp/core > /proc/sys/kernel/core_pattern
 test x`./build-old/test_crasher` = x
 test -z "`ls /tmp/core* 2>/dev/null`"
 
-# packed executables should generate coredumps when allow_coredumps=true
+# packed executables that call papaw_hide_exe() run from RAM have an empty
+# executable
+./build-old/test_sleeper &
+pid=$!
+test -z "`grep test_sleeper /proc/$pid/maps`"
+test ! -s /proc/$pid/exe
+
+# packed executables should not exit if traced but allow_ptrace=true
+meson configure build-old -Dallow_ptrace=true
+ninja -C build-old
+test x`./build-old/test_putser` = xhello
+
+# packed executables should generate coredumps if allow_coredumps=true
 meson configure build-old -Dallow_coredumps=true
 ninja -C build-old
 test x`./build-old/test_crasher` = x
