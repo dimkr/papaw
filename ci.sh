@@ -33,6 +33,7 @@ test -n "`strace ./build-old/test_putser 2>&1 | grep 'WEXITSTATUS(s) == 1'`"
 
 # packed executables don't generate coredumps by default
 echo /tmp/core > /proc/sys/kernel/core_pattern
+ulimit -c unlimited
 test x`./build-old/test_crasher` = x
 test -z "`ls /tmp/core* 2>/dev/null`"
 
