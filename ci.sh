@@ -33,7 +33,7 @@ then
     # pack /bin/sh and run the CI flow using the packed executable
     ./papawify build-old/papaw /bin/sh sh-packed
     export LD_PRELOAD=`pwd`/build-old/libpapaw.so
-    exec ./sh-packed $0
+    exec ./sh-packed -xe $0
 fi
 
 # packed executables should exit when attached with ptrace()
