@@ -22,11 +22,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# build with the oldest version of Meson we support
-CC=gcc-8 meson build-old
-ninja -C build-old
+if [ ! -f sh-packed ]
+then
+    # build with the oldest version of Meson we support
+    CC=gcc-8 meson build-old
+    ninja -C build-old
 
-test x`./build-old/test_putser` = xhello
+    test x`./build-old/test_putser` = xhello
+
+    # pack /bin/sh and run the CI flow using the packed executable
+    ./papawify build-old/papaw /bin/sh sh-packed
+    export LD_PRELOAD=`pwd`/build-old/libpapaw.so
+    exec ./sh-packed $0
+fi
 
 # packed executables should exit when attached with ptrace()
 test -n "`strace ./build-old/test_putser 2>&1 | grep 'WEXITSTATUS(s) == 1'`"
@@ -44,6 +52,13 @@ pid=$!
 sleep 1
 test -z "`grep test_sleeper /proc/$pid/maps`"
 test ! -s /proc/$pid/exe
+
+# the packed /bin/sh calls papaw_hide_exe() too, through LD_PRELOAD
+test -z "`grep sh-packed /proc/$$/maps`"
+test ! -s /proc/$$/exe
+
+# packed executables can be deleted while running
+rm -f sh-packed
 
 # packed executables should not exit if traced but allow_ptrace=true
 meson configure build-old -Dallow_ptrace=true

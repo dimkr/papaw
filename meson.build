@@ -55,6 +55,10 @@ libpapaw = static_library('papaw',
 install_headers('papaw.h')
 
 if not meson.is_cross_build() and not meson.is_subproject()
+    libpapaw_so = shared_library('papaw',
+                                  'exe.c',
+                                  c_args: cflags + ['-DPAPAW_SHARED_LIBRARY'])
+
     putser = executable('putser',
                         'putser.c',
                         c_args: cflags,

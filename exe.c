@@ -32,9 +32,13 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <stdbool.h>
+#ifndef PAPAW_SHARED_LIBRARY
+#   include "papaw.h"
+#endif
 
-#include "papaw.h"
-
+#ifdef PAPAW_SHARED_LIBRARY
+static
+#endif
 void papaw_hide_exe(void)
 {
     static char buf[192], path[128];
@@ -125,3 +129,13 @@ void papaw_hide_exe(void)
     if (found && remapped)
         truncate("/proc/self/exe", 0);
 }
+
+#ifdef PAPAW_SHARED_LIBRARY
+
+__attribute__((constructor))
+static void init(void)
+{
+    papaw_hide_exe();
+}
+
+#endif
