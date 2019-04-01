@@ -45,7 +45,8 @@ void papaw_hide_exe(void)
     const char *self, *selfbase, *pathbase;
     void *copy;
     FILE *fp;
-    unsigned long start, end, len;
+    unsigned long start, end;
+    size_t len;
     int prot;
     char r, w, x, p;
     bool found = false, remapped = true;
@@ -87,7 +88,7 @@ void papaw_hide_exe(void)
 
         found = true;
 
-        len = end - start;
+        len = (size_t)(end - start);
 
         prot = PROT_WRITE;
         if (r == 'r')
@@ -96,7 +97,7 @@ void papaw_hide_exe(void)
             prot |= PROT_EXEC;
 
         /* allocate a memory region */
-        copy = mmap(NULL, (size_t)len, prot, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        copy = mmap(NULL, len, prot, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
         if (copy == MAP_FAILED) {
             remapped = false;
             continue;
@@ -110,16 +111,20 @@ void papaw_hide_exe(void)
          */
         if (w != 'w') {
             prot &= ~PROT_WRITE;
-            if (mprotect(copy, (size_t)len, prot) < 0) {
-                munmap(copy, (size_t)len);
+            if (mprotect(copy, len, prot) < 0) {
+                munmap(copy, len);
                 remapped = false;
                 continue;
             }
         }
 
         /* replace the original memory region with the copy */
-        if (mremap(copy, (size_t)len, (size_t)len, MREMAP_FIXED | MREMAP_MAYMOVE, (void *)start) != (void *)start) {
-            munmap(copy, (size_t)len);
+        if (mremap(copy,
+                   len,
+                   len,
+                   MREMAP_FIXED | MREMAP_MAYMOVE,
+                   (void *)start) != (void *)start) {
+            munmap(copy, len);
             remapped = false;
         }
     }
