@@ -63,7 +63,7 @@ if get_option('ci')
                                   c_args: cflags + ['-DPAPAW_SHARED_LIBRARY'])
 
     putser = executable('putser',
-                        'putser.c',
+                        'ci/putser.c',
                         c_args: cflags,
                         link_args: ldflags)
 
@@ -75,7 +75,7 @@ if get_option('ci')
                                 depends: papaw)
 
     crasher = executable('crasher',
-                         'crasher.c',
+                         'ci/crasher.c',
                          c_args: cflags,
                          link_args: ldflags)
 
@@ -87,7 +87,7 @@ if get_option('ci')
                                  depends: papaw)
 
     sleeper = executable('sleeper',
-                         'sleeper.c',
+                         'ci/sleeper.c',
                          c_args: cflags,
                          link_args: ldflags,
                          link_with: libpapaw)
