@@ -25,7 +25,7 @@
 if [ ! -f sh-packed ]
 then
     # build with the oldest version of Meson we support
-    CC=gcc-8 meson build-old
+    CC=gcc-8 meson build-old -Dci=true
     ninja -C build-old
 
     test x`./build-old/test_putser` = xhello
@@ -82,7 +82,7 @@ test -n "`strace -qqe mkdir ./build-old/test_putser 2>&1 | grep $here`"
 valgrind -q --leak-check=full --error-exitcode=1 --malloc-fill=1 --free-fill=1 --track-fds=yes ./build-old/test_putser
 
 # build with clang 8 and ASan
-CC=clang-8 meson build-clang
+CC=clang-8 meson build-clang -Dci=true
 ninja -C build-clang
 test x`./build-clang/test_putser` = xhello
 meson configure build-clang -Db_sanitize=address
@@ -94,5 +94,5 @@ test x`./build-old/test_putser` = xhello
 
 # build with the latest version of Meson
 . /opt/meson/bin/activate
-meson build-latest
+meson build-latest -Dci=true
 ninja -C build-latest

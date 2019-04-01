@@ -47,14 +47,17 @@ papaw = executable('papaw',
                    c_args: cflags + ['-fvisibility=hidden', '-Wno-unused-function'] + config_cflags,
                    link_args: ldflags)
 
+papaw_includes = include_directories('.')
+
 libpapaw = static_library('papaw',
                           'exe.c',
+                          include_directories: papaw_includes,
                           c_args: cflags,
                           install: true)
 
 install_headers('papaw.h')
 
-if not meson.is_cross_build() and not meson.is_subproject()
+if get_option('ci')
     libpapaw_so = shared_library('papaw',
                                   'exe.c',
                                   c_args: cflags + ['-DPAPAW_SHARED_LIBRARY'])
