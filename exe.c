@@ -33,7 +33,7 @@
 #include <sys/mman.h>
 #include <stdbool.h>
 #ifndef PAPAW_SHARED_LIBRARY
-#   include "papaw.h"
+#   include <papaw.h>
 #endif
 
 #ifdef PAPAW_SHARED_LIBRARY
