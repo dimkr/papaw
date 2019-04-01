@@ -36,14 +36,14 @@ then
     exec ./sh-packed -xe $0
 fi
 
-# packed executables should exit when attached with ptrace()
-test -n "`strace ./build-old/test_putser 2>&1 | grep 'WEXITSTATUS(s) == 1'`"
+# by default, packed executables should not exit when attached with ptrace()
+test x`strace -o /dev/null ./build-old/test_putser` = xhello
 
-# packed executables don't generate coredumps by default
+# packed executables generate coredumps by default
 echo /tmp/core > /proc/sys/kernel/core_pattern
 ulimit -c unlimited
 test x`./build-old/test_crasher` = x
-test -z "`ls /tmp/core* 2>/dev/null`"
+test -n "`ls /tmp/core*`"
 
 # packed executables that call papaw_hide_exe() run from RAM have an empty
 # executable
@@ -60,16 +60,17 @@ test ! -s /proc/$$/exe
 # packed executables can be deleted while running
 rm -f sh-packed
 
-# packed executables should not exit if traced but allow_ptrace=true
-meson configure build-old -Dallow_ptrace=true
+# packed executables should exit if traced and allow_ptrace=false
+meson configure build-old -Dallow_ptrace=false
 ninja -C build-old
-test x`./build-old/test_putser` = xhello
+test -n "`strace ./build-old/test_putser 2>&1 | grep 'WEXITSTATUS(s) == 1'`"
 
-# packed executables should generate coredumps if allow_coredumps=true
-meson configure build-old -Dallow_coredumps=true
+# packed executables don't generate coredumps if allow_coredumps=false
+meson configure build-old -Dallow_coredumps=false
 ninja -C build-old
+rm -f /tmp/core*
 test x`./build-old/test_crasher` = x
-test -n "`ls /tmp/core*`"
+test -z "`ls /tmp/core* 2>/dev/null`"
 
 # the payload should be extracted to dir_prefix
 here=`pwd`

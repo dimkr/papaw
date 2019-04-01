@@ -1,3 +1,3 @@
 option('dir_prefix', type: 'string', value: '/tmp')
-option('allow_coredumps', type: 'boolean', value: false)
-option('allow_ptrace', type: 'boolean', value: false)
+option('allow_coredumps', type: 'boolean')
+option('allow_ptrace', type: 'boolean')
