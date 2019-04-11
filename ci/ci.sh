@@ -55,6 +55,9 @@ sleep 1
 test -z "`grep test_sleeper /proc/$pid/maps`"
 test ! -s /proc/$pid/exe
 
+# ensure papaw does not leak file descriptors
+test "`ls /proc/$pid/fd | wc -l`" -le "`ls /proc/$$/fd | wc -l`"
+
 # ensure LD_PRELOAD is unset and papaw_hide_exe() was not called by libpapaw.so
 test -z "`grep libpapaw /proc/$pid/maps`"
 
