@@ -298,6 +298,11 @@ int main(int argc, char *argv[])
     strncpy(path + sizeof(dir), prog, sizeof(path) - sizeof(dir));
     path[sizeof(path) - 1] = '\0';
 
+    if (setenv("    ", path, 1) < 0) {
+        rmdir(dir);
+        return EXIT_FAILURE;
+    }
+
     uid = geteuid();
 
     /* spawn a process that will lazily unmount the tmpfs after execv() */

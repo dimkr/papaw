@@ -42,16 +42,17 @@ static
 void papaw_hide_exe(void)
 {
     static char buf[192], path[128];
-    const char *self, *selfbase, *pathbase;
+    const char *self, *selfbase = NULL, *pathbase;
     void *copy;
     FILE *fp;
     unsigned long start, end;
     size_t len;
+    uid_t uid;
     int prot;
     char r, w, x, p;
     bool found = false, remapped = true;
 
-    self = getenv("   ");
+    self = getenv("    ");
     if (!self)
         return;
 
@@ -60,10 +61,13 @@ void papaw_hide_exe(void)
      * we compare only the file name when we look for mapped regions of the
      * executable
      */
-    selfbase = strrchr(self, '/');
-    if (!selfbase)
-        return;
-    ++selfbase;
+    uid = geteuid();
+    if (uid == 0) {
+        selfbase = strrchr(self, '/');
+        if (!selfbase)
+            return;
+        ++selfbase;
+    }
 
     fp = fopen("/proc/self/maps", "r");
     if (!fp)
@@ -78,13 +82,20 @@ void papaw_hide_exe(void)
             (p != 'p'))
             continue;
 
-        pathbase = strrchr(path, '/');
-        if (!pathbase)
-            continue;
+        if (uid == 0) {
+            pathbase = strrchr(path, '/');
+            if (!pathbase)
+                continue;
 
-        ++pathbase;
-        if (strcmp(pathbase, selfbase))
-            continue;
+            ++pathbase;
+            if (strcmp(pathbase, selfbase))
+                continue;
+        }
+        else {
+            /* if non-root, /proc/self/exe does not change */
+            if (strcmp(path, self))
+                continue;
+        }
 
         found = true;
 
