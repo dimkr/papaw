@@ -36,6 +36,8 @@ then
     exec ./sh-packed -xe $0
 fi
 
+unset LD_PRELOAD
+
 # by default, packed executables should not exit when attached with ptrace()
 test x`strace -o /dev/null ./build-old/test_putser` = xhello
 

@@ -152,7 +152,6 @@ __attribute__((constructor))
 static void init(void)
 {
     papaw_hide_exe();
-    unsetenv("LD_PRELOAD");
 }
 
 #endif
