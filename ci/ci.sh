@@ -53,6 +53,14 @@ sleep 1
 test -z "`grep test_sleeper /proc/$pid/maps`"
 test ! -s /proc/$pid/exe
 
+# regression test: papaw_hide_exe() used to work only if argv[0] is the basename
+ln -s test_sleeper ./build-old/test_argv
+./build-old/test_argv &
+pid=$!
+sleep 1
+test -z "`grep test_argv /proc/$pid/maps`"
+test ! -s /proc/$pid/exe
+
 # the packed /bin/sh calls papaw_hide_exe() too, through LD_PRELOAD
 test -z "`grep sh-packed /proc/$$/maps`"
 test ! -s /proc/$$/exe
