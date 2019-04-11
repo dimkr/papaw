@@ -55,6 +55,9 @@ sleep 1
 test -z "`grep test_sleeper /proc/$pid/maps`"
 test ! -s /proc/$pid/exe
 
+# ensure LD_PRELOAD is unset and papaw_hide_exe() was not called by libpapaw.so
+test -z "`grep libpapaw /proc/$pid/maps`"
+
 # regression test: papaw_hide_exe() used to work only if argv[0] is the basename
 ln -s test_sleeper ./build-old/test_argv
 ./build-old/test_argv &
