@@ -56,6 +56,9 @@ void papaw_hide_exe(void)
     if (!self)
         return;
 
+    /* try only once */
+    unsetenv("    ");
+
     /*
      * when the tmpfs is unmounted, /proc/self/exe points to /x for /tmp/x, so
      * we compare only the file name when we look for mapped regions of the
