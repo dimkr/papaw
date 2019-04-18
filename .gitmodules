@@ -1,6 +1,3 @@
-[submodule "xz-embedded"]
-	path = xz-embedded
-	url = https://git.tukaani.org/xz-embedded.git
 [submodule "miniz"]
 	path = miniz
 	url = https://github.com/richgel999/miniz
