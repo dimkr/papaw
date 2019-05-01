@@ -104,6 +104,10 @@ test x`./build-clang/test_putser` = xhello
 meson configure build-clang -Db_sanitize=address
 ./build-clang/test_putser
 
+# make sure unpacking works
+./unpapawify sh-packed sh-unpacked
+cmp /bin/sh sh-unpacked
+
 # make sure things still work when submodules are updated
 git submodule update --remote --recursive
 test x`./build-old/test_putser` = xhello

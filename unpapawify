@@ -22,20 +22,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import os
 import subprocess
 import sys
 import struct
 
-data = subprocess.check_output(
-    ["xz", "--check=none", "--lzma2=preset=9e,dict=64KiB", "-c",
-    sys.argv[2]]
-)
+with open(sys.argv[1], "rb") as infp:
+    data = infp.read()
+    size, = struct.unpack(">L", data[-4:])
 
-with open(sys.argv[1], "rb") as infp, open(sys.argv[3], "wb") as outfp:
-    outfp.write(infp.read())
-    outfp.write(data)
-    outfp.write(struct.pack(">L", os.path.getsize(sys.argv[2])))
-    outfp.write(struct.pack(">L", len(data)))
-
-os.chmod(sys.argv[3], 0o755)
+    xz = subprocess.Popen(["xz", "-d"],
+                          stdin=subprocess.PIPE,
+                          stdout=open(sys.argv[2], "wb"))
+    xz.stdin.write(data[-(size + 8):-8])
+    xz.stdin.close()
+    xz.wait()
