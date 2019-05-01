@@ -73,6 +73,10 @@ test ! -s /proc/$pid/exe
 test -z "`grep sh-packed /proc/$$/maps`"
 test ! -s /proc/$$/exe
 
+# make sure unpacking works
+./unpapawify sh-packed sh-unpacked
+cmp /bin/sh sh-unpacked
+
 # packed executables can be deleted while running
 rm -f sh-packed
 
@@ -103,10 +107,6 @@ ninja -C build-clang
 test x`./build-clang/test_putser` = xhello
 meson configure build-clang -Db_sanitize=address
 ./build-clang/test_putser
-
-# make sure unpacking works
-./unpapawify sh-packed sh-unpacked
-cmp /bin/sh sh-unpacked
 
 # make sure things still work when submodules are updated
 git submodule update --remote --recursive
