@@ -141,6 +141,15 @@ void papaw_hide_exe(void)
             munmap(copy, len);
             remapped = false;
         }
+
+        /*
+         * ask the kernel not to swap out the copy, so it cannot be read from
+         * disk by running the packed executable with very little free RAM
+         */
+        if (mlock((void *)start, len) < 0) {
+            munmap(copy, len);
+            remapped = false;
+        }
     }
 
     fclose(fp);
