@@ -24,7 +24,6 @@
 
 import os
 import subprocess
-import sys
 import struct
 import argparse
 
@@ -47,4 +46,4 @@ with open(args.stub, "rb") as infp, open(args.output, "wb") as outfp:
     outfp.write(struct.pack(">L", os.path.getsize(args.input)))
     outfp.write(struct.pack(">L", len(data)))
 
-os.chmod(sys.argv[3], 0o755)
+os.chmod(args.output, 0o755)
