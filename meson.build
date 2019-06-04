@@ -85,7 +85,7 @@ if get_option('ci')
                                       input : putser,
                                       command : [join_paths(meson.source_root(), 'papawify'), '-u', papawu, '@INPUT@', '@OUTPUT@'],
                                       build_by_default: true,
-                                      depends: papaw)
+                                      depends: papawu)
 
     crasher = executable('crasher',
                          'ci/crasher.c',
