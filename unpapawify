@@ -28,11 +28,15 @@ import struct
 
 with open(sys.argv[1], "rb") as infp:
     data = infp.read()
-    size, = struct.unpack(">L", data[-4:])
+    osize, size = struct.unpack(">LL", data[-8:])
 
-    xz = subprocess.Popen(["xz", "-d"],
-                          stdin=subprocess.PIPE,
-                          stdout=open(sys.argv[2], "wb"))
-    xz.stdin.write(data[-(size + 8):-8])
-    xz.stdin.close()
-    xz.wait()
+    if osize == size:
+        with open(sys.argv[2], "wb") as fp:
+            fp.write(data[-(size + 8):-8])
+    else:
+        xz = subprocess.Popen(["xz", "-d"],
+                              stdin=subprocess.PIPE,
+                              stdout=open(sys.argv[2], "wb"))
+        xz.stdin.write(data[-(size + 8):-8])
+        xz.stdin.close()
+        xz.wait()

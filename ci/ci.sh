@@ -112,6 +112,9 @@ meson configure build-clang -Db_sanitize=address
 git submodule update --remote --recursive
 test x`./build-old/test_putser` = xhello
 
+# make sure uncompressed binaries work
+test x`./build-old/test_uncompressed` = xhello
+
 # build with the latest version of Meson
 . /opt/meson/bin/activate
 meson build-latest -Dci=true

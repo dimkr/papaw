@@ -43,28 +43,37 @@
 #   include <sys/ptrace.h>
 #endif
 
-#define MINIZ_NO_ARCHIVE_APIS
-#define MINIZ_NO_ZLIB_APIS
-#include "miniz/miniz.c"
+#ifdef PAPAW_XZ
+#   define MINIZ_NO_ARCHIVE_APIS
+#   define MINIZ_NO_ZLIB_APIS
+#   include "miniz/miniz.c"
 
-#define XZ_EXTERN static
-#include "xz-embedded/linux/lib/xz/xz_dec_lzma2.c"
-#include "xz-embedded/linux/lib/xz/xz_dec_stream.c"
+#   define XZ_EXTERN static
+#   include "xz-embedded/linux/lib/xz/xz_dec_lzma2.c"
+#   include "xz-embedded/linux/lib/xz/xz_dec_stream.c"
+#endif
 
 #define DIR_TEMPLATE PAPAW_PREFIX"/.XXXXXX"
+
+#ifdef PAPAW_XZ
 
 static uint32_t xz_crc32(const uint8_t *buf, size_t size, uint32_t crc)
 {
     return (uint32_t)mz_crc32((mz_ulong)crc, buf, size);
 }
 
+#endif
+
 static bool extract(const char *path,
                     const uint32_t clen,
                     const unsigned char *data,
                     const uint32_t olen)
 {
+#ifdef PAPAW_XZ
     struct xz_buf xzbuf;
     struct xz_dec *xz;
+#endif
+    void *map;
     int out;
 
     out = open(path, O_CREAT | O_RDWR, 0755);
@@ -77,6 +86,26 @@ static bool extract(const char *path,
         return false;
     }
 
+#ifdef PAPAW_XZ
+    if (clen != olen) {
+        goto decompress;
+    }
+#endif
+
+    map = mmap(NULL, (size_t)olen, PROT_WRITE, MAP_SHARED, out, 0);
+    if (map == MAP_FAILED) {
+        close(out);
+        unlink(path);
+        return false;
+    }
+
+    memcpy(map, data, clen);
+    munmap(map, (size_t)olen);
+    close(out);
+    return true;
+
+#ifdef PAPAW_XZ
+decompress:
     xzbuf.out = mmap(NULL, (size_t)olen, PROT_WRITE, MAP_SHARED, out, 0);
     if (xzbuf.out == MAP_FAILED) {
         close(out);
@@ -111,6 +140,7 @@ static bool extract(const char *path,
     close(out);
 
     return true;
+#endif
 }
 
 static bool start_unmounter(const char *dir, const char *path, const uid_t uid)

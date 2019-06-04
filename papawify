@@ -26,16 +26,25 @@ import os
 import subprocess
 import sys
 import struct
+import argparse
 
-data = subprocess.check_output(
-    ["xz", "--check=none", "--lzma2=preset=9e,dict=64KiB", "-c",
-    sys.argv[2]]
-)
+parser = argparse.ArgumentParser()
+parser.add_argument('stub')
+parser.add_argument('input')
+parser.add_argument('output')
+parser.add_argument('-u', '--uncompressed', dest='uncompressed', action='store_true')
+args = parser.parse_args()
 
-with open(sys.argv[1], "rb") as infp, open(sys.argv[3], "wb") as outfp:
+cmd = ["xz", "--check=none", "--lzma2=preset=9e,dict=64KiB", "-c"]
+if args.uncompressed:
+    cmd = ["cat"]
+
+data = subprocess.check_output(cmd + [args.input])
+
+with open(args.stub, "rb") as infp, open(args.output, "wb") as outfp:
     outfp.write(infp.read())
     outfp.write(data)
-    outfp.write(struct.pack(">L", os.path.getsize(sys.argv[2])))
+    outfp.write(struct.pack(">L", os.path.getsize(args.input)))
     outfp.write(struct.pack(">L", len(data)))
 
 os.chmod(sys.argv[3], 0o755)

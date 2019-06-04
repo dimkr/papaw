@@ -44,8 +44,14 @@ endif
 papaw = executable('papaw',
                    'papaw.c',
                    include_directories: [include_directories('xz-embedded/userspace'), include_directories('xz-embedded/linux/include/linux')],
-                   c_args: cflags + ['-fvisibility=hidden', '-Wno-unused-function'] + config_cflags,
+                   c_args: cflags + ['-fvisibility=hidden', '-Wno-unused-function', '-DPAPAW_XZ'] + config_cflags,
                    link_args: ldflags)
+
+papawu = executable('papawu',
+                    'papaw.c',
+                    include_directories: [include_directories('xz-embedded/userspace'), include_directories('xz-embedded/linux/include/linux')],
+                    c_args: cflags + ['-fvisibility=hidden', '-Wno-unused-function'] + config_cflags,
+                    link_args: ldflags)
 
 papaw_includes = include_directories('.')
 
@@ -59,8 +65,8 @@ install_headers('papaw.h')
 
 if get_option('ci')
     libpapaw_so = shared_library('papaw',
-                                  'exe.c',
-                                  c_args: cflags + ['-DPAPAW_SHARED_LIBRARY'])
+                                 'exe.c',
+                                 c_args: cflags + ['-DPAPAW_SHARED_LIBRARY'])
 
     putser = executable('putser',
                         'ci/putser.c',
@@ -73,6 +79,13 @@ if get_option('ci')
                                 command : [join_paths(meson.source_root(), 'papawify'), papaw, '@INPUT@', '@OUTPUT@'],
                                 build_by_default: true,
                                 depends: papaw)
+
+    test_uncompressed = custom_target('test_uncompressed',
+                                      output : 'test_uncompressed',
+                                      input : putser,
+                                      command : [join_paths(meson.source_root(), 'papawify'), '-u', papawu, '@INPUT@', '@OUTPUT@'],
+                                      build_by_default: true,
+                                      depends: papaw)
 
     crasher = executable('crasher',
                          'ci/crasher.c',
