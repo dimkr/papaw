@@ -116,7 +116,7 @@ test x`./build-old/test_putser` = xhello
 test x`./build-old/test_uncompressed` = xhello
 
 # make sure unpacking of uncompressed binaries works
-./unpapawify test_uncompressed putser-unpacked
+./unpapawify build-old/test_uncompressed putser-unpacked
 cmp build-old/putser putser-unpacked
 
 # build with the latest version of Meson
