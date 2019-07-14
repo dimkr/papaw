@@ -35,7 +35,7 @@
 #   include <papaw.h>
 #endif
 
-static void papaw_do_hide_exe(const char *self)
+static void papaw_do_hide_exe(const char *self, const bool should_truncate)
 {
     static char buf[192], path[128];
     const char *selfbase = NULL, *pathbase;
@@ -155,7 +155,7 @@ static void papaw_do_hide_exe(const char *self)
 
     fclose(fp);
 
-    if (found && remapped) {
+    if (should_truncate && found && remapped) {
 #ifdef HAVE_TRUNCATE
         truncate("/proc/self/exe", 0);
 #else
@@ -180,7 +180,7 @@ void papaw_hide_exe(void)
     /* try only once */
     unsetenv("    ");
 
-    papaw_do_hide_exe(self);
+    papaw_do_hide_exe(self, true);
 }
 
 #ifdef PAPAW_SHARED_LIBRARY
