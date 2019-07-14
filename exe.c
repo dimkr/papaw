@@ -104,7 +104,7 @@ static void papaw_do_hide_exe(const char *self)
         if (x == 'x')
             prot |= PROT_EXEC;
 #else
-        /* we have no choice, because we want change permissions later */
+        /* we have no choice, because we can't change permissions later */
         prot = PROT_READ | PROT_WRITE | PROT_EXEC;
 #endif
 
