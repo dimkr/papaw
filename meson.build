@@ -25,7 +25,21 @@ project('papaw', 'c', version: '0.1', license: 'MIT')
 cflags = ['-Os', '-fomit-frame-pointer', '-ffunction-sections', '-fdata-sections', '-fmerge-all-constants']
 ldflags = ['-Wl,--gc-sections', '-Wl,--sort-common', '-Wl,-s']
 
-if meson.get_compiler('c').has_argument('-Wno-tautological-constant-out-of-range-compare')
+cc = meson.get_compiler('c')
+
+if cc.has_function('mprotect')
+    cflags += ['-DHAVE_MPROTECT']
+endif
+
+if cc.has_function('mlock')
+    cflags += ['-DHAVE_MLOCK']
+endif
+
+if cc.has_function('truncate')
+    cflags += ['-DHAVE_TRUNCATE']
+endif
+
+if cc.has_argument('-Wno-tautological-constant-out-of-range-compare')
     cflags += ['-Wno-tautological-constant-out-of-range-compare']
 endif
 

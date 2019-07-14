@@ -36,28 +36,21 @@
 #   include <papaw.h>
 #endif
 
-#ifdef PAPAW_SHARED_LIBRARY
-static
-#endif
-void papaw_hide_exe(void)
+static void papaw_do_hide_exe(const char *self)
 {
     static char buf[192], path[128];
-    const char *self, *selfbase = NULL, *pathbase;
+    const char *selfbase = NULL, *pathbase;
     void *copy;
     FILE *fp;
     unsigned long start, end;
     size_t len;
     uid_t uid;
     int prot;
+#ifndef HAVE_TRUNCATE
+    int fd;
+#endif
     char r, w, x, p;
     bool found = false, remapped = true;
-
-    self = getenv("    ");
-    if (!self)
-        return;
-
-    /* try only once */
-    unsetenv("    ");
 
     /*
      * when the tmpfs is unmounted, /proc/self/exe points to /x for /tmp/x, so
@@ -104,11 +97,16 @@ void papaw_hide_exe(void)
 
         len = (size_t)(end - start);
 
+#ifdef HAVE_MPROTECT
         prot = PROT_WRITE;
         if (r == 'r')
             prot |= PROT_READ;
         if (x == 'x')
             prot |= PROT_EXEC;
+#else
+        /* we have no choice, because we want change permissions later */
+        prot = PROT_READ | PROT_WRITE | PROT_EXEC;
+#endif
 
         /* allocate a memory region */
         copy = mmap(NULL, len, prot, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -123,6 +121,7 @@ void papaw_hide_exe(void)
          * if the original memory region is read-only, make the copy read-only
          * once we're done writing to it
          */
+#ifdef HAVE_MPROTECT
         if (w != 'w') {
             prot &= ~PROT_WRITE;
             if (mprotect(copy, len, prot) < 0) {
@@ -131,6 +130,7 @@ void papaw_hide_exe(void)
                 continue;
             }
         }
+#endif
 
         /* replace the original memory region with the copy */
         if (mremap(copy,
@@ -146,16 +146,42 @@ void papaw_hide_exe(void)
          * ask the kernel not to swap out the copy, so it cannot be read from
          * disk by running the packed executable with very little free RAM
          */
+#ifdef HAVE_MLOCK
         if (mlock((void *)start, len) < 0) {
             munmap(copy, len);
             remapped = false;
         }
+#endif
     }
 
     fclose(fp);
 
-    if (found && remapped)
+    if (found && remapped) {
+#ifdef HAVE_TRUNCATE
         truncate("/proc/self/exe", 0);
+#else
+        fd = open("/proc/self/exe", O_TRUNC | O_RDONLY);
+        if (fd >= 0)
+            close(fd);
+#endif
+    }
+}
+
+#ifdef PAPAW_SHARED_LIBRARY
+static
+#endif
+void papaw_hide_exe(void)
+{
+    const char *self;
+
+    self = getenv("    ");
+    if (!self)
+        return;
+
+    /* try only once */
+    unsetenv("    ");
+
+    papaw_do_hide_exe(self);
 }
 
 #ifdef PAPAW_SHARED_LIBRARY
