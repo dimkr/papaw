@@ -80,7 +80,7 @@ install_headers('papaw.h')
 if get_option('ci')
     libpapaw_so = shared_library('papaw',
                                  'exe.c',
-                                 c_args: cflags + ['-DPAPAW_SHARED_LIBRARY'])
+                                 c_args: cflags + ['-D_GNU_SOURCE', '-DPAPAW_SHARED_LIBRARY'])
 
     putser = executable('putser',
                         'ci/putser.c',
