@@ -72,7 +72,7 @@ papaw_includes = include_directories('.')
 libpapaw = static_library('papaw',
                           'exe.c',
                           include_directories: papaw_includes,
-                          c_args: cflags,
+                          c_args: cflags + ['-D_GNU_SOURCE'],
                           install: true)
 
 install_headers('papaw.h')
