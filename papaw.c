@@ -36,6 +36,7 @@
 #include <sys/wait.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <stdio.h>
 #ifndef PAPAW_ALLOW_COREDUMPS
 #   include <sys/resource.h>
 #endif
@@ -143,7 +144,7 @@ decompress:
 #endif
 }
 
-static bool start_unmounter(const char *dir, const char *path, const uid_t uid)
+static bool start_child(const char *dir, const char *path, const uid_t uid)
 {
     struct timespec ts = {.tv_sec = 0, .tv_nsec = 0};
     sigset_t set, oset;
@@ -152,6 +153,15 @@ static bool start_unmounter(const char *dir, const char *path, const uid_t uid)
     pid_t pid, reaped;
 #ifndef PAPAW_ALLOW_PTRACE
     pid_t ppid = -1;
+#endif
+
+    /*
+     * we don't need the child if we have no directory to delete and don't need
+     * to call ptrace()
+     */
+#ifdef PAPAW_ALLOW_PTRACE
+    if (uid == 0)
+        return true;
 #endif
 
     /* block SIGCHLD */
@@ -210,11 +220,7 @@ static bool start_unmounter(const char *dir, const char *path, const uid_t uid)
         /* wait until the parent calls execv() or exits */
         out = read(pfds[0], &status, sizeof(status));
 
-        /* lazily unmount the tmpfs */
         if (uid == 0) {
-            if (umount2(dir, MNT_DETACH) == 0)
-                rmdir(dir);
-
 #ifndef PAPAW_ALLOW_PTRACE
             ptrace(PTRACE_DETACH, ppid);
 #endif
@@ -279,7 +285,7 @@ int main(int argc, char *argv[])
 #ifndef PAPAW_ALLOW_COREDUMPS
     struct rlimit lim;
 #endif
-    int self;
+    int self, fd;
     void *p;
     struct foot *lens;
     size_t off;
@@ -335,8 +341,11 @@ int main(int argc, char *argv[])
 
     uid = geteuid();
 
-    /* spawn a process that will lazily unmount the tmpfs after execv() */
-    if (!start_unmounter(dir, path, uid)) {
+    /*
+     * spawn a process that will check if a debugger is attached, or delete the
+     * executable after execv()
+     */
+    if (!start_child(dir, path, uid)) {
         rmdir(dir);
         return EXIT_FAILURE;
     }
@@ -394,6 +403,34 @@ int main(int argc, char *argv[])
         if ((uid != 0) || (umount2(dir, MNT_DETACH) == 0))
             rmdir(dir);
         return EXIT_FAILURE;
+    }
+
+    if (uid == 0) {
+        /* open the executable for reading */
+        fd = open(path, O_RDONLY);
+
+        /*
+         * unmount the file system while keeping the file open, so nobody can
+         * open the file after us
+         */
+        if ((uid == 0) &&
+            ((umount2(dir, MNT_DETACH) < 0) ||
+             (rmdir(dir) < 0))) {
+            if (fd >= 0)
+                close(fd);
+            return EXIT_FAILURE;
+        }
+
+        if (fd < 0) {
+            return EXIT_FAILURE;
+        }
+
+        if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
+            close(fd);
+            return EXIT_FAILURE;
+        }
+
+        sprintf(path, "/proc/self/fd/%d", fd);
     }
 
     execv(path, argv);
