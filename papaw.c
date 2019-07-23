@@ -65,7 +65,7 @@ static uint32_t xz_crc32(const uint8_t *buf, size_t size, uint32_t crc)
 
 #endif
 
-static bool extract(const char *path,
+static bool extract(const int out,
                     const uint32_t clen,
                     const unsigned char *data,
                     const uint32_t olen)
@@ -75,44 +75,29 @@ static bool extract(const char *path,
     struct xz_dec *xz;
 #endif
     void *map;
-    int out;
 
-    out = open(path, O_CREAT | O_RDWR, 0755);
-    if (out < 0)
+    if (ftruncate(out, (off_t)olen) < 0)
         return false;
-
-    if (ftruncate(out, (off_t)olen) < 0) {
-        close(out);
-        unlink(path);
-        return false;
-    }
 
 #ifdef PAPAW_XZ
-    if (clen != olen) {
+    if (clen != olen)
         goto decompress;
-    }
 #endif
 
     map = mmap(NULL, (size_t)olen, PROT_WRITE, MAP_SHARED, out, 0);
     if (map == MAP_FAILED) {
-        close(out);
-        unlink(path);
         return false;
     }
 
     memcpy(map, data, clen);
     munmap(map, (size_t)olen);
-    close(out);
     return true;
 
 #ifdef PAPAW_XZ
 decompress:
     xzbuf.out = mmap(NULL, (size_t)olen, PROT_WRITE, MAP_SHARED, out, 0);
-    if (xzbuf.out == MAP_FAILED) {
-        close(out);
-        unlink(path);
+    if (xzbuf.out == MAP_FAILED)
         return false;
-    }
 
     xzbuf.in = data;
     xzbuf.in_pos = 0;
@@ -123,22 +108,17 @@ decompress:
     xz = xz_dec_init(XZ_SINGLE, 0);
     if (!xz) {
         munmap(xzbuf.out, (size_t)olen);
-        close(out);
-        unlink(path);
         return false;
     }
 
     if ((xz_dec_run(xz, &xzbuf) != XZ_STREAM_END) || (xzbuf.out_size != olen)) {
         xz_dec_end(xz);
         munmap(xzbuf.out, (size_t)olen);
-        close(out);
-        unlink(path);
         return false;
     }
 
     xz_dec_end(xz);
     munmap(xzbuf.out, (size_t)olen);
-    close(out);
 
     return true;
 #endif
@@ -285,7 +265,7 @@ int main(int argc, char *argv[])
 #ifndef PAPAW_ALLOW_COREDUMPS
     struct rlimit lim;
 #endif
-    int self, fd;
+    int self, wr, r = -1;
     void *p;
     struct foot *lens;
     size_t off;
@@ -393,45 +373,63 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    /* decompress and extract the executable to the tmpfs */
-    ok = extract(path, clen, p + off - clen, olen);
-
-    munmap(p, (size_t)stbuf.st_size);
-    close(self);
-
-    if (!ok) {
+    wr = open(path, O_CREAT | O_RDWR, 0755);
+    if (wr < 0) {
         if ((uid != 0) || (umount2(dir, MNT_DETACH) == 0))
             rmdir(dir);
         return EXIT_FAILURE;
     }
 
     if (uid == 0) {
-        /* open the executable for reading */
-        fd = open(path, O_RDONLY);
-
         /*
-         * unmount the file system while keeping the file open, so nobody can
-         * open the file after us
+         * open the executable for reading: we cannot run it while it's opened
+         * for writing, but we need a file descriptor so we can run the
+         * executable through /proc/self/fd/%d once we unmount the tmpfs and the
+         * path is no longer accessible
          */
-        if ((uid == 0) &&
-            ((umount2(dir, MNT_DETACH) < 0) ||
-             (rmdir(dir) < 0))) {
-            if (fd >= 0)
-                close(fd);
+        r = open(path, O_RDONLY);
+        if (r < 0) {
+            close(wr);
+            if (umount2(dir, MNT_DETACH) == 0)
+                rmdir(dir);
             return EXIT_FAILURE;
         }
 
-        if (fd < 0) {
+        if (fcntl(r, F_SETFD, FD_CLOEXEC) < 0) {
+            close(r);
+            close(wr);
+            if (umount2(dir, MNT_DETACH) == 0)
+                rmdir(dir);
             return EXIT_FAILURE;
         }
 
-        if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
-            close(fd);
+        /* unmount the file system while keeping the file open */
+        if (umount2(dir, MNT_DETACH) < 0) {
+            close(r);
+            close(wr);
             return EXIT_FAILURE;
         }
 
-        sprintf(path, "/proc/self/fd/%d", fd);
+        rmdir(dir);
     }
+
+    /* decompress and extract the executable to the file */
+    ok = extract(wr, clen, p + off - clen, olen);
+
+    munmap(p, (size_t)stbuf.st_size);
+    close(self);
+    close(wr);
+
+    if (!ok) {
+        if (uid == 0)
+            close(r);
+        else if (unlink(path) == 0)
+            rmdir(dir);
+        return EXIT_FAILURE;
+    }
+
+    if (uid == 0)
+        sprintf(path, "/proc/self/fd/%d", r);
 
     execv(path, argv);
 
