@@ -31,6 +31,9 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <stdbool.h>
+#ifdef HAVE_PRCTL
+#   include <sys/prctl.h>
+#endif
 #ifndef PAPAW_SHARED_LIBRARY
 #   include <papaw.h>
 #endif
@@ -62,6 +65,14 @@ static void papaw_do_hide_exe(const char *self, const bool should_truncate)
         if (!selfbase)
             return;
         ++selfbase;
+
+        /*
+         * restore the process name: when we run /proc/self/exe/3, the process
+         * name is changed from basename to "3"
+         */
+#ifdef HAVE_PRCTL
+        prctl(PR_SET_NAME, selfbase);
+#endif
     }
 
     fp = fopen("/proc/self/maps", "r");

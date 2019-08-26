@@ -39,6 +39,10 @@ if cc.has_function('truncate')
     cflags += ['-DHAVE_TRUNCATE']
 endif
 
+if cc.has_function('prctl') and cc.has_header_symbol('sys/prctl.h', 'PR_SET_NAME')
+    cflags += ['-DHAVE_PRCTL']
+endif
+
 if cc.has_argument('-Wno-tautological-constant-out-of-range-compare')
     cflags += ['-Wno-tautological-constant-out-of-range-compare']
 endif
