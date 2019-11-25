@@ -67,8 +67,7 @@ papaw = executable('papaw',
 
 papawu = executable('papawu',
                     'papaw.c',
-                    include_directories: [include_directories('xz-embedded/userspace'), include_directories('xz-embedded/linux/include/linux')],
-                    c_args: cflags + ['-fvisibility=hidden', '-Wno-unused-function'] + config_cflags,
+                    c_args: cflags + ['-fvisibility=hidden'] + config_cflags,
                     link_args: ldflags)
 
 papaw_includes = include_directories('.')
