@@ -67,7 +67,7 @@ papaw = executable('papaw',
 
 papawu = executable('papawu',
                     'papaw.c',
-                    c_args: cflags + ['-fvisibility=hidden'] + config_cflags,
+                    c_args: cflags + config_cflags,
                     link_args: ldflags)
 
 papaw_includes = include_directories('.')
