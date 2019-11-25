@@ -24,32 +24,31 @@
 
 if [ ! -f sh-packed ]
 then
-    # build with the oldest version of Meson we support
-    meson build-old -Dci=true
-    ninja -C build-old
+    meson build -Dci=true
+    ninja -C build
 
-    test x`./build-old/test_putser` = xhello
+    test x`./build/test_putser` = xhello
 
     # pack /bin/sh and run the CI flow using the packed executable
-    ./papawify build-old/papaw /bin/sh sh-packed
-    export LD_PRELOAD=`pwd`/build-old/libpapaw.so
+    ./papawify build/papaw /bin/sh sh-packed
+    export LD_PRELOAD=`pwd`/build/libpapaw.so
     exec ./sh-packed -xe $0
 fi
 
 unset LD_PRELOAD
 
 # by default, packed executables should not exit when attached with ptrace()
-test x`strace -o /dev/null ./build-old/test_putser` = xhello
+test x`strace -o /dev/null ./build/test_putser` = xhello
 
 # packed executables generate coredumps by default
 echo /tmp/core > /proc/sys/kernel/core_pattern
 ulimit -c unlimited
-test x`./build-old/test_crasher` = x
+test x`./build/test_crasher` = x
 test -n "`ls /tmp/core*`"
 
 # packed executables that call papaw_hide_exe() run from RAM have an empty
 # executable
-./build-old/test_sleeper &
+./build/test_sleeper &
 pid=$!
 sleep 1
 test -z "`grep test_sleeper /proc/$pid/maps`"
@@ -62,8 +61,8 @@ test "`ls /proc/$pid/fd | wc -l`" -le "`ls /proc/$$/fd | wc -l`"
 test -z "`grep libpapaw /proc/$pid/maps`"
 
 # regression test: papaw_hide_exe() used to work only if argv[0] is the basename
-ln -s test_sleeper ./build-old/test_argv
-./build-old/test_argv &
+ln -s test_sleeper ./build/test_argv
+./build/test_argv &
 pid=$!
 sleep 1
 test -z "`grep test_argv /proc/$pid/maps`"
@@ -81,27 +80,27 @@ cmp /bin/sh sh-unpacked
 rm -f sh-packed
 
 # packed executables should exit if traced and allow_ptrace=false
-meson configure build-old -Dallow_ptrace=false
-ninja -C build-old
-test -n "`strace ./build-old/test_putser 2>&1 | grep 'WEXITSTATUS(s) == 1'`"
+meson configure build -Dallow_ptrace=false
+ninja -C build
+test -n "`strace ./build/test_putser 2>&1 | grep 'WEXITSTATUS(s) == 1'`"
 
 # packed executables don't generate coredumps if allow_coredumps=false
-meson configure build-old -Dallow_coredumps=false
-ninja -C build-old
+meson configure build -Dallow_coredumps=false
+ninja -C build
 rm -f /tmp/core*
-test x`./build-old/test_crasher` = x
+test x`./build/test_crasher` = x
 test -z "`ls /tmp/core* 2>/dev/null`"
 
 # the payload should be extracted to dir_prefix
 here=`pwd`
-meson configure build-old -Ddir_prefix=$here
-ninja -C build-old
-test -n "`strace -qqe mkdir ./build-old/test_putser 2>&1 | grep $here`"
+meson configure build -Ddir_prefix=$here
+ninja -C build
+test -n "`strace -qqe mkdir ./build/test_putser 2>&1 | grep $here`"
 
 # make sure there are no file descriptor leaks
-valgrind -q --leak-check=full --error-exitcode=1 --malloc-fill=1 --free-fill=1 --track-fds=yes ./build-old/test_putser
+valgrind -q --leak-check=full --error-exitcode=1 --malloc-fill=1 --free-fill=1 --track-fds=yes ./build/test_putser
 
-# build with clang 8 and ASan
+# build with clang and ASan
 CC=clang meson build-clang -Dci=true
 ninja -C build-clang
 test x`./build-clang/test_putser` = xhello
@@ -110,16 +109,11 @@ meson configure build-clang -Db_sanitize=address
 
 # make sure things still work when submodules are updated
 git submodule update --remote --recursive
-test x`./build-old/test_putser` = xhello
+test x`./build/test_putser` = xhello
 
 # make sure uncompressed binaries work
-test x`./build-old/test_uncompressed` = xhello
+test x`./build/test_uncompressed` = xhello
 
 # make sure unpacking of uncompressed binaries works
-./unpapawify build-old/test_uncompressed putser-unpacked
-cmp build-old/putser putser-unpacked
-
-# build with the latest version of Meson
-. /opt/meson/bin/activate
-meson build-latest -Dci=true
-ninja -C build-latest
+./unpapawify build/test_uncompressed putser-unpacked
+cmp build/putser putser-unpacked
