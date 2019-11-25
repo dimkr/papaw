@@ -62,7 +62,7 @@ endif
 papaw = executable('papaw',
                    'papaw.c',
                    include_directories: [include_directories('xz-embedded/userspace'), include_directories('xz-embedded/linux/include/linux')],
-                   c_args: cflags + ['-fvisibility=hidden', '-Wno-unused-function', '-DPAPAW_XZ'] + config_cflags,
+                   c_args: cflags + ['-fvisibility=hidden', '-Wno-unused-function', '-DPAPAW_XZ', '-DXZ_DEC_SINGLE'] + config_cflags,
                    link_args: ldflags)
 
 papawu = executable('papawu',
