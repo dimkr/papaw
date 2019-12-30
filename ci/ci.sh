@@ -101,11 +101,11 @@ test -n "`strace -qqe mkdir ./build-$1/test_putser 2>&1 | grep $here`"
 valgrind -q --leak-check=full --error-exitcode=1 --malloc-fill=1 --free-fill=1 --track-fds=yes ./build-$1/test_putser
 
 # build with clang and ASan
-CC=clang meson build-clang -Dcompression=$1 -Dci=true
-ninja -C build-clang
-test x`./build-clang/test_putser` = xhello
-meson configure build-clang -Db_sanitize=address
-./build-clang/test_putser
+CC=clang meson build-clang-$1 -Dcompression=$1 -Dci=true
+ninja -C build-clang-$1
+test x`./build-clang-$1/test_putser` = xhello
+meson configure build-clang-$1 -Db_sanitize=address
+./build-clang-$1/test_putser
 
 # make sure things still work when submodules are updated
 git submodule update --remote --recursive
