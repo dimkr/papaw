@@ -52,6 +52,9 @@
 #   define XZ_EXTERN static
 #   include "xz-embedded/linux/lib/xz/xz_dec_lzma2.c"
 #   include "xz-embedded/linux/lib/xz/xz_dec_stream.c"
+#elif defined(PAPAW_LZMA)
+#   include "lzma/C/LzmaDec.c"
+#    define LZMA_HEADER_SIZE LZMA_PROPS_SIZE + 8
 #endif
 
 #define DIR_TEMPLATE PAPAW_PREFIX"/.XXXXXX"
@@ -65,6 +68,41 @@ static uint32_t xz_crc32(const uint8_t *buf, size_t size, uint32_t crc)
 
 #endif
 
+#ifdef PAPAW_LZMA
+
+static void *xalloc(const ISzAlloc *p, size_t size)
+{
+    unsigned char *ptr;
+
+    if (size > SIZE_MAX - sizeof(size_t))
+        return NULL;
+
+    ptr = mmap(NULL,
+               size + sizeof(size_t),
+               PROT_READ | PROT_WRITE,
+               MAP_PRIVATE | MAP_ANONYMOUS,
+               -1,
+               0);
+    if (ptr == MAP_FAILED)
+        return NULL;
+
+    *(size_t *)ptr = size;
+
+    return ptr + sizeof(size_t);
+}
+
+static void xfree(const ISzAlloc *p, void *address)
+{
+    unsigned char *ptr;
+
+    if (address != NULL) {
+        ptr = (unsigned char *)address - sizeof(size_t);
+        munmap(ptr, *(size_t *)ptr + sizeof(size_t));
+    }
+}
+
+#endif
+
 static bool extract(const int out,
                     const uint32_t clen,
                     const unsigned char *data,
@@ -73,13 +111,18 @@ static bool extract(const int out,
 #ifdef PAPAW_XZ
     struct xz_buf xzbuf;
     struct xz_dec *xz;
+#elif defined(PAPAW_LZMA)
+    SizeT inlen = clen - LZMA_HEADER_SIZE, outlen = olen;
+    unsigned char *p;
+    ELzmaStatus status;
+    const ISzAlloc alloc = {xalloc, xfree};
 #endif
     void *map;
 
     if (ftruncate(out, (off_t)olen) < 0)
         return false;
 
-#ifdef PAPAW_XZ
+#if defined(PAPAW_XZ) || defined(PAPAW_LZMA)
     if (clen != olen)
         goto decompress;
 #endif
@@ -120,6 +163,31 @@ decompress:
     xz_dec_end(xz);
     munmap(xzbuf.out, (size_t)olen);
 
+    return true;
+#elif defined(PAPAW_LZMA)
+decompress:
+    if (clen < LZMA_HEADER_SIZE)
+        return false;
+
+    p = mmap(NULL, (size_t)olen, PROT_WRITE, MAP_SHARED, out, 0);
+    if (p == MAP_FAILED)
+        return false;
+
+    if ((LzmaDecode(p,
+                    &outlen,
+                    data + LZMA_HEADER_SIZE,
+                    &inlen,
+                    data,
+                    LZMA_PROPS_SIZE,
+                    LZMA_FINISH_ANY,
+                    &status,
+                    &alloc) != SZ_OK) ||
+        (outlen != olen)) {
+        munmap(p, (size_t)olen);
+        return false;
+    }
+
+    munmap(p, (size_t)olen);
     return true;
 #endif
 }
@@ -353,7 +421,13 @@ int main(int argc, char *argv[])
     olen = ntohl(lens->olen);
     if ((clen >= stbuf.st_size) ||
         (clen > ULONG_MAX) ||
+#ifdef PAPAW_LZMA
+        (clen <= LZMA_HEADER_SIZE) ||
+#else
+        (clen == 0) ||
+#endif
         (clen > SSIZE_MAX) ||
+        (olen == 0) ||
         (olen > SSIZE_MAX)) {
         munmap(p, (size_t)stbuf.st_size);
         close(self);

@@ -29,5 +29,7 @@ variables:
 steps:
 - checkout: self
   submodules: true
-- script: docker run --privileged -w /root/papaw -v `pwd`:/root/papaw $(imageName) ./ci/ci.sh
-  displayName: 'CI script'
+- script: docker run --privileged -w /root/papaw -v `pwd`:/root/papaw $(imageName) ./ci/ci.sh xz
+  displayName: 'LZMA2'
+- script: docker run --privileged -w /root/papaw -v `pwd`:/root/papaw $(imageName) ./ci/ci.sh lzma
+  displayName: 'LAMA1'
