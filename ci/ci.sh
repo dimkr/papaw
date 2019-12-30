@@ -32,7 +32,7 @@ then
     # pack /bin/sh and run the CI flow using the packed executable
     ./build-$1/papawify build-$1/papaw /bin/sh sh-packed
     export LD_PRELOAD=`pwd`/build-$1/libpapaw.so
-    exec ./sh-packed -xe $0
+    exec ./sh-packed -xe $0 $1
 fi
 
 unset LD_PRELOAD
