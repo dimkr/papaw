@@ -94,7 +94,7 @@ test -z "`ls /tmp/core* 2>/dev/null`"
 # the payload should be extracted to dir_prefix
 here=`pwd`
 meson configure build-$1 -Ddir_prefix=$here
-ninja -C build
+ninja -C build-$1
 test -n "`strace -qqe mkdir ./build-$1/test_putser 2>&1 | grep $here`"
 
 # make sure there are no file descriptor leaks
