@@ -54,6 +54,7 @@
 #   include "xz-embedded/linux/lib/xz/xz_dec_stream.c"
 #elif defined(PAPAW_LZMA)
 #   include "lzma/C/LzmaDec.c"
+#    define LZMA_HEADER_SIZE LZMA_PROPS_SIZE + 8
 #endif
 
 #define DIR_TEMPLATE PAPAW_PREFIX"/.XXXXXX"
@@ -111,7 +112,7 @@ static bool extract(const int out,
     struct xz_buf xzbuf;
     struct xz_dec *xz;
 #elif defined(PAPAW_LZMA)
-    SizeT inlen = clen, outlen = olen;
+    SizeT inlen = clen - LZMA_HEADER_SIZE, outlen = olen;
     unsigned char *p;
     ELzmaStatus status;
     const ISzAlloc alloc = {xalloc, xfree};
@@ -167,13 +168,16 @@ decompress:
     return true;
 #elif defined(PAPAW_LZMA)
 decompress:
+    if (clen < LZMA_HEADER_SIZE)
+        return false;
+
     p = mmap(NULL, (size_t)olen, PROT_WRITE, MAP_SHARED, out, 0);
     if (p == MAP_FAILED)
         return false;
 
     if ((LzmaDecode(p,
                     &outlen,
-                    data + LZMA_PROPS_SIZE + 8,
+                    data + LZMA_HEADER_SIZE,
                     &inlen,
                     data,
                     LZMA_PROPS_SIZE,
@@ -419,9 +423,12 @@ int main(int argc, char *argv[])
     olen = ntohl(lens->olen);
     if ((clen >= stbuf.st_size) ||
         (clen > ULONG_MAX) ||
+#ifdef PAPAW_LZMA
+        (clen <= LZMA_HEADER_SIZE) ||
+#else
         (clen == 0) ||
+#endif
         (clen > SSIZE_MAX) ||
-        (olen == clen) ||
         (olen == 0) ||
         (olen > SSIZE_MAX)) {
         munmap(p, (size_t)stbuf.st_size);
