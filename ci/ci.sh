@@ -24,13 +24,13 @@
 
 if [ ! -f sh-packed ]
 then
-    meson build -Dci=true
+    meson build -Dcompression=$1 -Dci=true
     ninja -C build
 
     test x`./build/test_putser` = xhello
 
     # pack /bin/sh and run the CI flow using the packed executable
-    ./papawify build/papaw /bin/sh sh-packed
+    ./build/papawify build/papaw /bin/sh sh-packed
     export LD_PRELOAD=`pwd`/build/libpapaw.so
     exec ./sh-packed -xe $0
 fi

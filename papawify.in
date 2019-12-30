@@ -34,7 +34,7 @@ parser.add_argument('output')
 parser.add_argument('-u', '--uncompressed', dest='uncompressed', action='store_true')
 args = parser.parse_args()
 
-cmd = ["xz", "--check=none", "--lzma2=preset=9e,dict=512KiB", "-c"]
+cmd = ["xz", @XZ_ARGS@, "-c"]
 if args.uncompressed:
     cmd = ["cat"]
 

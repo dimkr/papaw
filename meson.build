@@ -59,10 +59,23 @@ if get_option('allow_ptrace')
     config_cflags += ['-DPAPAW_ALLOW_PTRACE']
 endif
 
+cfg = configuration_data()
+
+compression_cflags = ['-DPAPAW_XZ', '-Wno-unused-function']
+compression_includes = [include_directories('xz-embedded/userspace'), include_directories('xz-embedded/linux/include/linux')]
+cfg.set('XZ_ARGS', '"--check=none", "--lzma2=preset=9e,dict=512KiB"')
+
+compression = get_option('compression')
+if compression == 'lzma'
+    compression_cflags = ['-DPAPAW_LZMA']
+    compression_includes = []
+    cfg.set('XZ_ARGS', '"--format=lzma", "--lzma1=preset=9e,dict=512KiB"')
+endif
+
 papaw = executable('papaw',
                    'papaw.c',
-                   include_directories: [include_directories('xz-embedded/userspace'), include_directories('xz-embedded/linux/include/linux')],
-                   c_args: cflags + ['-fvisibility=hidden', '-Wno-unused-function', '-DPAPAW_XZ', '-DXZ_DEC_SINGLE'] + config_cflags,
+                   include_directories: compression_includes,
+                   c_args: cflags + ['-fvisibility=hidden'] + compression_cflags + config_cflags,
                    link_args: ldflags)
 
 papawu = executable('papawu',
@@ -80,6 +93,10 @@ libpapaw = static_library('papaw',
 
 install_headers('papaw.h')
 
+papawify = configure_file(input: 'papawify.in',
+                          output: 'papawify',
+                          configuration: cfg)
+
 if get_option('ci')
     libpapaw_so = shared_library('papaw',
                                  'exe.c',
@@ -93,14 +110,14 @@ if get_option('ci')
     test_putser = custom_target('test_putser',
                                 output : 'test_putser',
                                 input : putser,
-                                command : [join_paths(meson.source_root(), 'papawify'), papaw, '@INPUT@', '@OUTPUT@'],
+                                command : ['python3', papawify, papaw, '@INPUT@', '@OUTPUT@'],
                                 build_by_default: true,
                                 depends: papaw)
 
     test_uncompressed = custom_target('test_uncompressed',
                                       output : 'test_uncompressed',
                                       input : putser,
-                                      command : [join_paths(meson.source_root(), 'papawify'), '-u', papawu, '@INPUT@', '@OUTPUT@'],
+                                      command : ['python3', papawify, '-u', papawu, '@INPUT@', '@OUTPUT@'],
                                       build_by_default: true,
                                       depends: papawu)
 
@@ -112,7 +129,7 @@ if get_option('ci')
     test_crasher = custom_target('test_crasher',
                                  output : 'test_crasher',
                                  input : crasher,
-                                 command : [join_paths(meson.source_root(), 'papawify'), papaw, '@INPUT@', '@OUTPUT@'],
+                                 command : ['python3', papawify, papaw, '@INPUT@', '@OUTPUT@'],
                                  build_by_default: true,
                                  depends: papaw)
 
@@ -125,7 +142,7 @@ if get_option('ci')
     test_sleeper = custom_target('test_sleeper',
                                  output : 'test_sleeper',
                                  input : sleeper,
-                                 command : [join_paths(meson.source_root(), 'papawify'), papaw, '@INPUT@', '@OUTPUT@'],
+                                 command : ['python3', papawify, papaw, '@INPUT@', '@OUTPUT@'],
                                  build_by_default: true,
                                  depends: papaw)
 endif
