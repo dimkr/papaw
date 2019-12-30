@@ -80,20 +80,20 @@ cmp /bin/sh sh-unpacked
 rm -f sh-packed
 
 # packed executables should exit if traced and allow_ptrace=false
-meson configure build -Dallow_ptrace=false
-ninja -C build
+meson configure build-$1 -Dallow_ptrace=false
+ninja -C build-$1
 test -n "`strace ./build-$1/test_putser 2>&1 | grep 'WEXITSTATUS(s) == 1'`"
 
 # packed executables don't generate coredumps if allow_coredumps=false
-meson configure build -Dallow_coredumps=false
-ninja -C build
+meson configure build-$1 -Dallow_coredumps=false
+ninja -C build-$1
 rm -f /tmp/core*
 test x`./build-$1/test_crasher` = x
 test -z "`ls /tmp/core* 2>/dev/null`"
 
 # the payload should be extracted to dir_prefix
 here=`pwd`
-meson configure build -Ddir_prefix=$here
+meson configure build-$1 -Ddir_prefix=$here
 ninja -C build
 test -n "`strace -qqe mkdir ./build-$1/test_putser 2>&1 | grep $here`"
 
@@ -101,7 +101,7 @@ test -n "`strace -qqe mkdir ./build-$1/test_putser 2>&1 | grep $here`"
 valgrind -q --leak-check=full --error-exitcode=1 --malloc-fill=1 --free-fill=1 --track-fds=yes ./build-$1/test_putser
 
 # build with clang and ASan
-CC=clang meson build-clang -Dci=true
+CC=clang meson build-clang -Dcompression=$1 -Dci=true
 ninja -C build-clang
 test x`./build-clang/test_putser` = xhello
 meson configure build-clang -Db_sanitize=address
