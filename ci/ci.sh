@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-if [ ! -f sh-packed ]
+if [ ! -f sh-packed-$1 ]
 then
     meson build-$1 -Dcompression=$1 -Dci=true
     ninja -C build-$1
@@ -30,9 +30,9 @@ then
     test x`./build-$1/test_putser` = xhello
 
     # pack /bin/sh and run the CI flow using the packed executable
-    ./build-$1/papawify build-$1/papaw /bin/sh sh-packed
+    ./build-$1/papawify build-$1/papaw /bin/sh sh-packed-$1
     export LD_PRELOAD=`pwd`/build-$1/libpapaw.so
-    exec ./sh-packed -xe $0 $1
+    exec ./sh-packed-$1 -xe $0 $1
 fi
 
 unset LD_PRELOAD
@@ -69,15 +69,15 @@ test -z "`grep test_argv /proc/$pid/maps`"
 test ! -s /proc/$pid/exe
 
 # the packed /bin/sh calls papaw_hide_exe() too, through LD_PRELOAD
-test -z "`grep sh-packed /proc/$$/maps`"
+test -z "`grep sh-packed-$1 /proc/$$/maps`"
 test ! -s /proc/$$/exe
 
 # make sure unpacking works
-./unpapawify sh-packed sh-unpacked
-cmp /bin/sh sh-unpacked
+./unpapawify sh-packed-$1 sh-unpacked-$1
+cmp /bin/sh sh-unpacked-$1
 
 # packed executables can be deleted while running
-rm -f sh-packed
+rm -f sh-packed-$1
 
 # packed executables should exit if traced and allow_ptrace=false
 meson configure build-$1 -Dallow_ptrace=false
