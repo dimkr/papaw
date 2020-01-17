@@ -1,7 +1,7 @@
 /*
  * This file is part of papaw.
  *
- * Copyright (c) 2019 Dima Krasner
+ * Copyright (c) 2019, 2020 Dima Krasner
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -50,6 +50,19 @@
 #   include "miniz/miniz.c"
 
 #   define XZ_EXTERN static
+
+#   include "xz-embedded/userspace/xz_config.h"
+static void *xalloc(size_t);
+static void xfree(void *);
+#   undef kmalloc
+#   define kmalloc(size, flags) xalloc(size)
+#   undef kfree
+#   define kfree xfree
+#   undef vmalloc
+#   define vmalloc xalloc
+#   undef vfree
+#   define vfree xfree
+
 #   include "xz-embedded/linux/lib/xz/xz_dec_lzma2.c"
 #   include "xz-embedded/linux/lib/xz/xz_dec_stream.c"
 #elif defined(PAPAW_LZMA)
@@ -68,9 +81,13 @@ static uint32_t xz_crc32(const uint8_t *buf, size_t size, uint32_t crc)
 
 #endif
 
-#ifdef PAPAW_LZMA
+#if defined(PAPAW_LZMA) || defined(PAPAW_XZ)
 
+#   ifdef PAPAW_XZ
+static void *xalloc(size_t size)
+#   else
 static void *xalloc(const ISzAlloc *p, size_t size)
+#   endif
 {
     unsigned char *ptr;
 
@@ -91,7 +108,11 @@ static void *xalloc(const ISzAlloc *p, size_t size)
     return ptr + sizeof(size_t);
 }
 
+#   ifdef PAPAW_XZ
+static void xfree(void *address)
+#   else
 static void xfree(const ISzAlloc *p, void *address)
+#   endif
 {
     unsigned char *ptr;
 
