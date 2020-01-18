@@ -69,8 +69,6 @@ static void xfree(void *);
 #    define LZMA_HEADER_SIZE LZMA_PROPS_SIZE + 8
 #endif
 
-#define DIR_TEMPLATE PAPAW_PREFIX"/.XXXXXX"
-
 #ifdef PAPAW_XZ
 
 static uint32_t xz_crc32(const uint8_t *buf, size_t size, uint32_t crc)
@@ -359,7 +357,7 @@ int main(int argc, char *argv[])
 {
     struct stat stbuf;
     static char exe[PATH_MAX],
-                dir[] = DIR_TEMPLATE,
+                dir[sizeof(PAPAW_PREFIX"/.2147483647")],
                 path[sizeof(dir) + 1 + NAME_MAX];
 #ifndef PAPAW_ALLOW_COREDUMPS
     struct rlimit lim;
@@ -399,7 +397,9 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
 
     /* create a directory */
-    if (!mkdtemp(dir))
+    memcpy(dir, PAPAW_PREFIX"/.", sizeof(PAPAW_PREFIX"/.") - 1);
+    itoa(dir + sizeof(PAPAW_PREFIX"/.") - 1, (int)(getpid() % INT_MAX));
+    if (mkdir(dir, 0700) < 0)
         return EXIT_FAILURE;
 
     prog = strrchr(argv[0], '/');
