@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-for i in arm-any32-linux-musleabi i386-any32-linux-musl mips-any32-linux-musl
+for i in arm-any32-linux-musleabi armeb-any32-linux-musleabi i386-any32-linux-musl mips-any32-linux-musl mipsel-any32-linux-musl
 do
     wget -qO- https://github.com/dimkr/toolchains/releases/latest/download/$i.tar.gz | tar -xzf - -C /
     meson --cross-file=$i build-$1-$i
