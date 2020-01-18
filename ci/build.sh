@@ -1,6 +1,8 @@
+#!/bin/sh -xe
+
 # This file is part of papaw.
 #
-# Copyright (c) 2019, 2020 Dima Krasner
+# Copyright (c) 2020 Dima Krasner
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,30 +22,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-pool:
-  vmImage: 'Ubuntu 16.04'
-
-variables:
-  imageName: dimkr/c-dev:latest
-
-steps:
-- checkout: self
-  submodules: true
-- script: docker run --privileged -w /root/papaw -v `pwd`:/root/papaw $(imageName) ./ci/test.sh xz
-  displayName: 'LZMA2 Test'
-- script: docker run --privileged -w /root/papaw -v `pwd`:/root/papaw $(imageName) ./ci/build.sh xz
-  displayName: 'LZMA2 Build'
-- script: docker run --privileged -w /root/papaw -v `pwd`:/root/papaw $(imageName) ./ci/test.sh lzma
-  displayName: 'LAMA1 Test'
-- script: docker run --privileged -w /root/papaw -v `pwd`:/root/papaw $(imageName) ./ci/build.sh lzma
-  displayName: 'LAMA1 Build'
-- task: GitHubRelease@1
-  inputs:
-    gitHubConnection: 'dimkr'
-    repositoryName: '$(Build.Repository.Name)'
-    action: 'create'
-    target: '$(Build.SourceVersion)'
-    tagSource: 'gitTag'
-    assets: 'artifacts/*'
-    changeLogCompareToRelease: 'lastFullRelease'
-    changeLogType: 'commitBased'
+for i in arm-any32-linux-musleabi i386-any32-linux-musl mips-any32-linux-musl
+do
+    curl -L https://github.com/dimkr/toolchains/releases/latest/download/$i.tar.gz | sudo tar -xzvf - -C /
+    meson --cross-file=$i build-$1-$i
+    ninja -C build-$1-$i
+    install -D -m 755 build-$1-$i/papaw artifacts/papaw-$1-$i
+fi
