@@ -28,4 +28,4 @@ do
     meson --cross-file=$i build-$1-$i
     ninja -C build-$1-$i
     install -D -m 755 build-$1-$i/papaw artifacts/papaw-$1-$i
-fi
+done
