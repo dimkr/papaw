@@ -24,7 +24,7 @@
 
 for i in arm-any32-linux-musleabi i386-any32-linux-musl mips-any32-linux-musl
 do
-    curl -L https://github.com/dimkr/toolchains/releases/latest/download/$i.tar.gz | sudo tar -xzvf - -C /
+    wget -O- https://github.com/dimkr/toolchains/releases/latest/download/$i.tar.gz | tar -xzvf - -C /
     meson --cross-file=$i build-$1-$i
     ninja -C build-$1-$i
     install -D -m 755 build-$1-$i/papaw artifacts/papaw-$1-$i
