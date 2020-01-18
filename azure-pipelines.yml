@@ -45,5 +45,6 @@ steps:
     target: '$(Build.SourceVersion)'
     tagPattern: $(Build.BuildNumber)
     tagSource: 'userSpecifiedTag'
+    tag: $(Build.BuildNumber)
     assets: 'artifacts/*'
     addChangeLog: false
