@@ -27,7 +27,7 @@ do
     wget -qO- https://github.com/dimkr/toolchains/releases/latest/download/$i.tar.gz | tar -xzf - -C /
     meson --cross-file=$i build-$1-$i
     ninja -C build-$1-$i
-    install -D -m 755 build-$1-$i/papaw artifacts/papaw-$1-$i
+    install -D -m 755 build-$1-$i/papaw artifacts/papaw-$1-${i%%-*}
 done
 
 install -m 755 build-$1-arm-any32-linux-musleabi/papawify artifacts/papawify-$1
