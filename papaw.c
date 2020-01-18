@@ -36,7 +36,6 @@
 #include <sys/wait.h>
 #include <stdbool.h>
 #include <errno.h>
-#include <stdio.h>
 #ifndef PAPAW_ALLOW_COREDUMPS
 #   include <sys/resource.h>
 #endif
@@ -340,6 +339,17 @@ static bool start_child(const char *dir, const char *path, const uid_t uid)
     return true;
 }
 
+static char *itoa(char *s, int i)
+{
+    if (i > 10)
+        s = itoa(s, i / 10);
+    else
+        s[1] = '\0';
+
+    *s = '0' + i % 10;
+    return s + 1;
+}
+
 struct foot {
     uint32_t olen;
     uint32_t clen;
@@ -523,8 +533,10 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    if (uid == 0)
-        sprintf(path, "/proc/self/fd/%d", r);
+    if (uid == 0) {
+        memcpy(path, "/proc/self/fd/", sizeof("/proc/self/fd/") - 1);
+        itoa(path + sizeof("/proc/self/fd/") - 1, r);
+    }
 
     execv(path, argv);
 
