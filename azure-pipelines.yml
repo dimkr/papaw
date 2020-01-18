@@ -46,5 +46,6 @@ steps:
     tagPattern: $(Build.BuildNumber)
     tagSource: 'userSpecifiedTag'
     tag: $(Build.BuildNumber)
+    title: $(Build.BuildNumber)
     assets: 'artifacts/*'
     addChangeLog: false
