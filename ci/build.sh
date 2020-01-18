@@ -29,3 +29,6 @@ do
     ninja -C build-$1-$i
     install -D -m 755 build-$1-$i/papaw artifacts/papaw-$1-$i
 done
+
+install -m 755 build-$1-arm-any32-linux-musleabi/papawify artifacts/papawify-$1
+install -m 755 unpapawify artifacts/unpapawify-$1
