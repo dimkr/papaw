@@ -28,6 +28,15 @@ papaw uses [Meson](http://mesonbuild.com/) as its build system. To pack an execu
 
 papaw can be used as a Meson subproject; in that case, custom_target() is the recommended way to run papawify.
 
+However, it is also possible to run papawify manually and pre-built, static binaries are available [here](https://github.com/dimkr/papaw/releases). For example:
+
+```
+wget https://github.com/dimkr/papaw/releases/latest/download/papawify-xz https://github.com/dimkr/papaw/releases/latest/download/papaw-xz-i386
+python3 papawify-xz papaw-xz-i386 /bin/bash bash-packed
+du -h /bin/bash bash-packed
+./bash-packed --version
+```
+
 ## Legal Information
 
 papaw is free and unencumbered software released under the terms of the MIT license; see COPYING for the license text.
