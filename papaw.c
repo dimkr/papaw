@@ -367,6 +367,7 @@ int main(int argc, char *argv[])
     struct foot *lens;
     size_t off;
     ssize_t out;
+    size_t len;
     uint32_t clen, olen;
     bool ok;
     const char *prog;
@@ -398,7 +399,7 @@ int main(int argc, char *argv[])
 
     /* create a directory */
     memcpy(dir, PAPAW_PREFIX"/.", sizeof(PAPAW_PREFIX"/.") - 1);
-    itoa(dir + sizeof(PAPAW_PREFIX"/.") - 1, (int)(getpid() % INT_MAX));
+    len = itoa(dir + sizeof(PAPAW_PREFIX"/.") - 1, (int)(getpid() % INT_MAX)) - dir;
     if (mkdir(dir, 0700) < 0)
         return EXIT_FAILURE;
 
@@ -408,9 +409,9 @@ int main(int argc, char *argv[])
     else
         prog = argv[0];
 
-    memcpy(path, dir, sizeof(dir) - 1);
-    path[sizeof(dir) - 1] = '/';
-    strncpy(path + sizeof(dir), prog, sizeof(path) - sizeof(dir));
+    memcpy(path, dir, len);
+    path[len] = '/';
+    strncpy(path + len + 1, prog, sizeof(path) - len - 1);
     path[sizeof(path) - 1] = '\0';
 
     if (setenv("    ", path, 1) < 0) {
