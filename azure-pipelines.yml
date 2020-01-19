@@ -24,7 +24,7 @@ pool:
   vmImage: 'Ubuntu 16.04'
 
 variables:
-  imageName: dimkr/c-dev:focal
+  imageName: dimkr/c-dev:clang
 
 steps:
 - checkout: self
