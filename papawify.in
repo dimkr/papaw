@@ -2,7 +2,7 @@
 
 # This file is part of papaw.
 #
-# Copyright (c) 2019 Dima Krasner
+# Copyright (c) 2019, 2020 Dima Krasner
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@ parser.add_argument('output')
 parser.add_argument('-u', '--uncompressed', dest='uncompressed', action='store_true')
 args = parser.parse_args()
 
-cmd = ["xz", @XZ_ARGS@, "-c"]
+cmd = [@CMD@]
 if args.uncompressed:
     cmd = ["cat"]
 

@@ -37,6 +37,10 @@ steps:
   displayName: 'LAMA1 Test'
 - script: docker run --privileged -w /root/papaw -v `pwd`:/root/papaw $(imageName) ./ci/build.sh lzma
   displayName: 'LAMA1 Build'
+- script: docker run --privileged -w /root/papaw -v `pwd`:/root/papaw $(imageName) ./ci/test.sh zstd
+  displayName: 'Zstandard Test'
+- script: docker run --privileged -w /root/papaw -v `pwd`:/root/papaw $(imageName) ./ci/build.sh zstd
+  displayName: 'Zstandard Build'
 - task: GitHubRelease@1
   inputs:
     gitHubConnection: 'dimkr'

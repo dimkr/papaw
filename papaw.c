@@ -65,8 +65,10 @@ static void xfree(void *);
 #   include "xz-embedded/linux/lib/xz/xz_dec_lzma2.c"
 #   include "xz-embedded/linux/lib/xz/xz_dec_stream.c"
 #elif defined(PAPAW_LZMA)
-#   include "lzma/C/LzmaDec.c"
+#    include "lzma/C/LzmaDec.c"
 #    define LZMA_HEADER_SIZE LZMA_PROPS_SIZE + 8
+#elif defined(PAPAW_ZSTD)
+#    include "zstddeclib.c"
 #endif
 
 #ifdef PAPAW_XZ
@@ -134,13 +136,15 @@ static bool extract(const int out,
     unsigned char *p;
     ELzmaStatus status;
     const ISzAlloc alloc = {xalloc, xfree};
+#elif defined(PAPAW_ZSTD)
+    unsigned char *p;
 #endif
     void *map;
 
     if (ftruncate(out, (off_t)olen) < 0)
         return false;
 
-#if defined(PAPAW_XZ) || defined(PAPAW_LZMA)
+#if defined(PAPAW_XZ) || defined(PAPAW_LZMA) || defined(PAPAW_ZSTD)
     if (clen != olen)
         goto decompress;
 #endif
@@ -201,6 +205,22 @@ decompress:
                     &status,
                     &alloc) != SZ_OK) ||
         (outlen != olen)) {
+        munmap(p, (size_t)olen);
+        return false;
+    }
+
+    munmap(p, (size_t)olen);
+    return true;
+#elif defined(PAPAW_ZSTD)
+decompress:
+    p = mmap(NULL, (size_t)olen, PROT_WRITE, MAP_SHARED, out, 0);
+    if (p == MAP_FAILED)
+        return false;
+
+    if (ZSTD_isError(ZSTD_decompress(p,
+                                     (size_t)olen,
+                                     data,
+                                     (size_t)clen))) {
         munmap(p, (size_t)olen);
         return false;
     }
