@@ -73,7 +73,7 @@ test -z "`grep sh-packed-$1 /proc/$$/maps`"
 test ! -s /proc/$$/exe
 
 # make sure unpacking works
-./unpapawify sh-packed-$1 sh-unpacked-$1
+./build-$1/unpapawify sh-packed-$1 sh-unpacked-$1
 cmp /bin/sh sh-unpacked-$1
 
 # packed executables can be deleted while running
@@ -115,5 +115,5 @@ test x`./build-$1/test_putser` = xhello
 test x`./build-$1/test_uncompressed` = xhello
 
 # make sure unpacking of uncompressed binaries works
-./unpapawify build-$1/test_uncompressed putser-unpacked
+./build-$1/unpapawify build-$1/test_uncompressed putser-unpacked
 cmp build-$1/putser putser-unpacked
