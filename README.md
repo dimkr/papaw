@@ -22,12 +22,14 @@ papaw consists of a small executable (~15-40K) containing a decompressor. It ext
 
 The payload executable is extracted to a temporary file. When running as root, this is done by mounting a tmpfs file system and lazily unmounting it before the extraction.
 
-## Supported Decompressors
+## Supported Compression Algorithms
 
-* [XZ Embedded](https://tukaani.org/xz/embedded.html) (the default)
-* The [LZMA SDK](https://www.7-zip.org/sdk.html) decompressor
-* The [Zstandard](https://github.com/facebook/zstd) decompressor
-* [miniz](https://github.com/richgel999/miniz)
+* LZMA2, using [XZ Embedded](https://tukaani.org/xz/embedded.html) (the default)
+* LZMA1, using the [LZMA SDK](https://www.7-zip.org/sdk.html) decompressor
+* Zstandard, using the [zstd](https://github.com/facebook/zstd) decompressor
+* Deflate, using [miniz](https://github.com/richgel999/miniz)
+
+The first two are extremely similar in compression ratio, code size, memory usage and speed.
 
 ## Usage
 
