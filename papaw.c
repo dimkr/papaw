@@ -65,10 +65,10 @@ static void xfree(void *);
 #   include "xz-embedded/linux/lib/xz/xz_dec_lzma2.c"
 #   include "xz-embedded/linux/lib/xz/xz_dec_stream.c"
 #elif defined(PAPAW_LZMA)
-#    include "lzma/C/LzmaDec.c"
-#    define LZMA_HEADER_SIZE LZMA_PROPS_SIZE + 8
+#   include "lzma/C/LzmaDec.c"
+#   define LZMA_HEADER_SIZE LZMA_PROPS_SIZE + 8
 #elif defined(PAPAW_ZSTD)
-#    include "zstddeclib.c"
+#   include "zstddeclib.h"
 #endif
 
 #ifdef PAPAW_XZ

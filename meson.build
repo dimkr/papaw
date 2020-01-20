@@ -61,7 +61,7 @@ endif
 
 cfg = configuration_data()
 
-compression_dependencies = []
+compression_sources = []
 compression_cflags = ['-DPAPAW_XZ', '-Wno-unused-function']
 compression_includes = [include_directories('xz-embedded/userspace'), include_directories('xz-embedded/linux/include/linux')]
 cfg.set('CMD', '"xz", "-c", "--check=none", "--lzma2=preset=9e,dict=512KiB"')
@@ -74,32 +74,31 @@ if compression == 'lzma'
 elif compression == 'zstd'
     compression_cflags = ['-DPAPAW_ZSTD']
     compression_includes = []
-    compression_dependencies += [
-        declare_dependency(files: custom_target('zstddeclib',
-                           input: 'zstd/contrib/single_file_decoder/zstddeclib-in.c',
-                           output: 'zstddeclib.c',
-                           command: [
-                               join_paths(meson.source_root(), 'zstd/contrib/single_file_decoder/combine.sh'),
-                               '-r',
-                               join_paths(meson.source_root(), 'zstd/lib'),
-                               '-r',
-                               join_paths(meson.source_root(), 'zstd/lib/common'),
-                               '-r',
-                               join_paths(meson.source_root(), 'zstd/lib/decompress'),
-                               '-o',
-                               '@OUTPUT@',
-                               '@INPUT@'
-                           ]))
+    compression_sources += [
+        custom_target('zstddeclib',
+                      input: 'zstd/contrib/single_file_decoder/zstddeclib-in.c',
+                      output: 'zstddeclib.h',
+                      command: [
+                          join_paths(meson.source_root(), 'zstd/contrib/single_file_decoder/combine.sh'),
+                          '-r',
+                          join_paths(meson.source_root(), 'zstd/lib'),
+                          '-r',
+                          join_paths(meson.source_root(), 'zstd/lib/common'),
+                          '-r',
+                          join_paths(meson.source_root(), 'zstd/lib/decompress'),
+                          '-o',
+                          '@OUTPUT@',
+                          '@INPUT@'
+                      ])
     ]
     cfg.set('CMD', '"zstd", "-c", "--ultra", "-22", "--no-check"')
 endif
 
 papaw = executable('papaw',
-                   'papaw.c',
+                   ['papaw.c'] + compression_sources,
                    include_directories: compression_includes,
                    c_args: cflags + ['-fvisibility=hidden'] + compression_cflags + config_cflags,
-                   link_args: ldflags,
-                   dependencies: compression_dependencies)
+                   link_args: ldflags)
 
 papawu = executable('papawu',
                     'papaw.c',
