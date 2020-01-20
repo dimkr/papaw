@@ -1,8 +1,6 @@
-#!/usr/bin/python3
-
 # This file is part of papaw.
 #
-# Copyright (c) 2019, 2020 Dima Krasner
+# Copyright (c) 2020 Dima Krasner
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,28 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import os
-import subprocess
-import struct
-import argparse
+FROM dimkr/c-dev:clang
 
-parser = argparse.ArgumentParser()
-parser.add_argument('stub')
-parser.add_argument('input')
-parser.add_argument('output')
-parser.add_argument('-u', '--uncompressed', dest='uncompressed', action='store_true')
-args = parser.parse_args()
-
-cmd = [@COMPRESSION_CMD@]
-if args.uncompressed:
-    cmd = ["cat"]
-
-data = subprocess.check_output(cmd + [args.input])
-
-with open(args.stub, "rb") as infp, open(args.output, "wb") as outfp:
-    outfp.write(infp.read())
-    outfp.write(data)
-    outfp.write(struct.pack(">L", os.path.getsize(args.input)))
-    outfp.write(struct.pack(">L", len(data)))
-
-os.chmod(args.output, 0o755)
+RUN apt-get -qq update && apt-get -y install zstd
+RUN for i in arm-any32-linux-musleabi armeb-any32-linux-musleabi mips-any32-linux-musl mipsel-any32-linux-musl i386-any32-linux-musl; do wget -qO- https://github.com/dimkr/toolchains/releases/latest/download/$i.tar.gz | tar -xzf - -C /; done

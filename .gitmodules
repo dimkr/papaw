@@ -4,3 +4,6 @@
 [submodule "xz-embedded"]
 	path = xz-embedded
 	url = https://github.com/dimkr/xz-embedded
+[submodule "zstd"]
+	path = zstd
+	url = https://github.com/facebook/zstd

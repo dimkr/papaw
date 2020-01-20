@@ -32,4 +32,4 @@ do
 done
 
 install -m 755 build-$1-arm-any32-linux-musleabi/papawify artifacts/papawify-$1
-install -m 755 unpapawify artifacts/unpapawify-$1
+install -m 755 build-$1-arm-any32-linux-musleabi/unpapawify artifacts/unpapawify-$1

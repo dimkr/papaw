@@ -18,9 +18,16 @@ It is designed to be portable across different devices, therefore it avoids mach
 
 ## Implementation
 
-papaw consists of a small executable (~15-20K) containing [XZ Embedded](https://tukaani.org/xz/embedded.html) or the [LZMA SDK](https://www.7-zip.org/sdk.html) decompressor. It extracts a LZMA-compressed executable appended to it by the papawify script.
+papaw consists of a small executable (~15-40K) containing a decompressor. It extracts a compressed executable appended to it by the papawify script.
 
 The payload executable is extracted to a temporary file. When running as root, this is done by mounting a tmpfs file system and lazily unmounting it before the extraction.
+
+## Supported Decompressors
+
+* [XZ Embedded](https://tukaani.org/xz/embedded.html) (the default)
+* The [LZMA SDK](https://www.7-zip.org/sdk.html) decompressor
+* The [Zstandard](https://github.com/facebook/zstd) decompressor
+* [miniz](https://github.com/richgel999/miniz)
 
 ## Usage
 
