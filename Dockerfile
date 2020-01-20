@@ -23,3 +23,4 @@
 FROM dimkr/c-dev:clang
 
 RUN apt-get -qq update && apt-get -y install zstd
+RUN for i in arm-any32-linux-musleabi armeb-any32-linux-musleabi mips-any32-linux-musl mipsel-any32-linux-musl i386-any32-linux-musl; do wget -qO- https://github.com/dimkr/toolchains/releases/latest/download/$i.tar.gz | tar -xzf - -C /; done
