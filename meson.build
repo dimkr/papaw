@@ -1,6 +1,6 @@
 # This file is part of papaw.
 #
-# Copyright (c) 2019 Dima Krasner
+# Copyright (c) 2019, 2020 Dima Krasner
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -61,19 +61,48 @@ endif
 
 cfg = configuration_data()
 
+compression_sources = []
 compression_cflags = ['-DPAPAW_XZ', '-Wno-unused-function']
 compression_includes = [include_directories('xz-embedded/userspace'), include_directories('xz-embedded/linux/include/linux')]
-cfg.set('XZ_ARGS', '"--check=none", "--lzma2=preset=9e,dict=512KiB"')
+cfg.set('COMPRESSION_CMD', '"xz", "-c", "--check=none", "--lzma2=preset=9e,dict=512KiB"')
+cfg.set('DECOMPRESSION_CMD', '"xz", "-d"')
 
 compression = get_option('compression')
 if compression == 'lzma'
     compression_cflags = ['-DPAPAW_LZMA']
     compression_includes = []
-    cfg.set('XZ_ARGS', '"--format=lzma", "--lzma1=preset=9e,dict=512KiB"')
+    cfg.set('COMPRESSION_CMD', '"xz", "-c", "--format=lzma", "--lzma1=preset=9e,dict=512KiB"')
+elif compression == 'zstd'
+    compression_cflags = ['-DPAPAW_ZSTD']
+    compression_includes = []
+    compression_sources += [
+        custom_target('zstddeclib',
+                      input: 'zstd/contrib/single_file_decoder/zstddeclib-in.c',
+                      output: 'zstddeclib.h',
+                      command: [
+                          join_paths(meson.source_root(), 'zstd/contrib/single_file_decoder/combine.sh'),
+                          '-r',
+                          join_paths(meson.source_root(), 'zstd/lib'),
+                          '-r',
+                          join_paths(meson.source_root(), 'zstd/lib/common'),
+                          '-r',
+                          join_paths(meson.source_root(), 'zstd/lib/decompress'),
+                          '-o',
+                          '@OUTPUT@',
+                          '@INPUT@'
+                      ])
+    ]
+    cfg.set('COMPRESSION_CMD', '"zstd", "-c", "--ultra", "-22", "--no-check"')
+    cfg.set('DECOMPRESSION_CMD', '"zstd", "-d"')
+elif compression == 'deflate'
+    compression_cflags = ['-DPAPAW_DEFLATE']
+    compression_includes = []
+    cfg.set('COMPRESSION_CMD', '"python3", "-c", "import sys, zlib; sys.stdout.buffer.write(zlib.compress(open(sys.argv[1], \'rb\').read(), 9))"')
+    cfg.set('DECOMPRESSION_CMD', '"python3", "-c", "import sys, zlib; sys.stdout.buffer.write(zlib.decompress(sys.stdin.buffer.read()))"')
 endif
 
 papaw = executable('papaw',
-                   'papaw.c',
+                   ['papaw.c'] + compression_sources,
                    include_directories: compression_includes,
                    c_args: cflags + ['-fvisibility=hidden'] + compression_cflags + config_cflags,
                    link_args: ldflags)
@@ -96,6 +125,10 @@ install_headers('papaw.h')
 papawify = configure_file(input: 'papawify.in',
                           output: 'papawify',
                           configuration: cfg)
+
+unpapawify = configure_file(input: 'unpapawify.in',
+                            output: 'unpapawify',
+                            configuration: cfg)
 
 if get_option('ci')
     libpapaw_so = shared_library('papaw',

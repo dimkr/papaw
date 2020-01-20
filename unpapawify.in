@@ -2,7 +2,7 @@
 
 # This file is part of papaw.
 #
-# Copyright (c) 2019 Dima Krasner
+# Copyright (c) 2019, 2020 Dima Krasner
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@ with open(sys.argv[1], "rb") as infp:
         with open(sys.argv[2], "wb") as fp:
             fp.write(data[-(size + 8):-8])
     else:
-        xz = subprocess.Popen(["xz", "-d"],
+        xz = subprocess.Popen([@DECOMPRESSION_CMD@],
                               stdin=subprocess.PIPE,
                               stdout=open(sys.argv[2], "wb"))
         xz.stdin.write(data[-(size + 8):-8])
