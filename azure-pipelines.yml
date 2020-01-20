@@ -41,6 +41,10 @@ steps:
   displayName: 'Zstandard Test'
 - script: docker run --privileged -w /root/papaw -v `pwd`:/root/papaw $(imageName) ./ci/build.sh zstd
   displayName: 'Zstandard Build'
+- script: docker run --privileged -w /root/papaw -v `pwd`:/root/papaw $(imageName) ./ci/test.sh deflate
+  displayName: 'Deflate Test'
+- script: docker run --privileged -w /root/papaw -v `pwd`:/root/papaw $(imageName) ./ci/build.sh deflate
+  displayName: 'Deflate Build'
 - task: GitHubRelease@1
   inputs:
     gitHubConnection: 'dimkr'

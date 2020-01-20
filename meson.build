@@ -92,6 +92,10 @@ elif compression == 'zstd'
                       ])
     ]
     cfg.set('CMD', '"zstd", "-c", "--ultra", "-22", "--no-check"')
+elif compression == 'deflate'
+    compression_cflags = ['-DPAPAW_DEFLATE']
+    compression_includes = []
+    cfg.set('CMD', '"python3", "-c", "import sys, zlib; sys.stdout.buffer.write(zlib.compress(sys.stdin.buffer.read(), 9))"')
 endif
 
 papaw = executable('papaw',
