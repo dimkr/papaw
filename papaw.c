@@ -84,6 +84,12 @@ static void xfree(void *);
 #   include "lzma/C/LzmaDec.c"
 #   define LZMA_HEADER_SIZE LZMA_PROPS_SIZE + 8
 #elif defined(PAPAW_ZSTD)
+#   define DYNAMIC_BMI2 0
+#   define ZSTD_NO_INLINE
+#   define ZSTDLIB_VISIBILITY
+#   define ZSTD_FORCE_DECOMPRESS_SEQUENCES_SHORT
+#   define HUF_FORCE_DECOMPRESS_X1
+#   define MEM_FORCE_MEMORY_ACCESS 0
 #   include "zstddeclib.h"
 #endif
 
