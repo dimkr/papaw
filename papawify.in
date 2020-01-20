@@ -34,7 +34,7 @@ parser.add_argument('output')
 parser.add_argument('-u', '--uncompressed', dest='uncompressed', action='store_true')
 args = parser.parse_args()
 
-cmd = [@CMD@]
+cmd = [@COMPRESSION_CMD@]
 if args.uncompressed:
     cmd = ["cat"]
 
