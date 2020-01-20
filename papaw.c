@@ -44,15 +44,31 @@
 #endif
 
 #ifdef PAPAW_XZ
-#   define MINIZ_NO_ARCHIVE_APIS
 #   define MINIZ_NO_ZLIB_APIS
-#   include "miniz/miniz.c"
+#endif
 
+#if defined(PAPAW_XZ) || defined(PAPAW_DEFLATE)
+#   define MINIZ_NO_ARCHIVE_APIS
+
+static void *xalloc(size_t);
+static void xfree(void *);
+#   include "miniz/miniz_common.h"
+#   undef MZ_MALLOC
+#   undef MZ_FREE
+#   define MZ_MALLOC xalloc
+#   define MZ_FREE xfree
+
+#   ifdef PAPAW_DEFLATE
+#       include "miniz/miniz_tinfl.c"
+#   endif
+
+#   include "miniz/miniz.c"
+#endif
+
+#ifdef PAPAW_XZ
 #   define XZ_EXTERN static
 
 #   include "xz-embedded/userspace/xz_config.h"
-static void *xalloc(size_t);
-static void xfree(void *);
 #   undef kmalloc
 #   define kmalloc(size, flags) xalloc(size)
 #   undef kfree
@@ -66,7 +82,15 @@ static void xfree(void *);
 #   include "xz-embedded/linux/lib/xz/xz_dec_stream.c"
 #elif defined(PAPAW_LZMA)
 #   include "lzma/C/LzmaDec.c"
-#    define LZMA_HEADER_SIZE LZMA_PROPS_SIZE + 8
+#   define LZMA_HEADER_SIZE LZMA_PROPS_SIZE + 8
+#elif defined(PAPAW_ZSTD)
+#   define DYNAMIC_BMI2 0
+#   define ZSTD_NO_INLINE
+#   define ZSTDLIB_VISIBILITY
+#   define ZSTD_FORCE_DECOMPRESS_SEQUENCES_SHORT
+#   define HUF_FORCE_DECOMPRESS_X1
+#   define MEM_FORCE_MEMORY_ACCESS 0
+#   include "zstddeclib.h"
 #endif
 
 #ifdef PAPAW_XZ
@@ -78,9 +102,9 @@ static uint32_t xz_crc32(const uint8_t *buf, size_t size, uint32_t crc)
 
 #endif
 
-#if defined(PAPAW_LZMA) || defined(PAPAW_XZ)
+#if defined(PAPAW_LZMA) || defined(PAPAW_XZ) || defined(PAPAW_DEFLATE)
 
-#   ifdef PAPAW_XZ
+#   if defined(PAPAW_XZ) || defined(PAPAW_DEFLATE)
 static void *xalloc(size_t size)
 #   else
 static void *xalloc(const ISzAlloc *p, size_t size)
@@ -105,7 +129,7 @@ static void *xalloc(const ISzAlloc *p, size_t size)
     return ptr + sizeof(size_t);
 }
 
-#   ifdef PAPAW_XZ
+#   if defined(PAPAW_XZ) || defined(PAPAW_DEFLATE)
 static void xfree(void *address)
 #   else
 static void xfree(const ISzAlloc *p, void *address)
@@ -134,13 +158,18 @@ static bool extract(const int out,
     unsigned char *p;
     ELzmaStatus status;
     const ISzAlloc alloc = {xalloc, xfree};
+#elif defined(PAPAW_ZSTD)
+    unsigned char *p;
+#elif defined(PAPAW_DEFLATE)
+    unsigned char *p;
+    mz_ulong outlen;
 #endif
     void *map;
 
     if (ftruncate(out, (off_t)olen) < 0)
         return false;
 
-#if defined(PAPAW_XZ) || defined(PAPAW_LZMA)
+#if defined(PAPAW_XZ) || defined(PAPAW_LZMA) || defined(PAPAW_ZSTD) || defined(PAPAW_DEFLATE)
     if (clen != olen)
         goto decompress;
 #endif
@@ -201,6 +230,39 @@ decompress:
                     &status,
                     &alloc) != SZ_OK) ||
         (outlen != olen)) {
+        munmap(p, (size_t)olen);
+        return false;
+    }
+
+    munmap(p, (size_t)olen);
+    return true;
+#elif defined(PAPAW_ZSTD)
+decompress:
+    p = mmap(NULL, (size_t)olen, PROT_WRITE, MAP_SHARED, out, 0);
+    if (p == MAP_FAILED)
+        return false;
+
+    if (ZSTD_isError(ZSTD_decompress(p,
+                                     (size_t)olen,
+                                     data,
+                                     (size_t)clen))) {
+        munmap(p, (size_t)olen);
+        return false;
+    }
+
+    munmap(p, (size_t)olen);
+    return true;
+#elif defined(PAPAW_DEFLATE)
+decompress:
+    p = mmap(NULL, (size_t)olen, PROT_WRITE, MAP_SHARED, out, 0);
+    if (p == MAP_FAILED)
+        return false;
+
+    outlen = (mz_ulong)olen;
+    if (mz_uncompress(p,
+                      &outlen,
+                      data,
+                      (mz_ulong)clen) != MZ_OK) {
         munmap(p, (size_t)olen);
         return false;
     }
