@@ -25,7 +25,7 @@
 for i in arm-any32-linux-musleabi armeb-any32-linux-musleabi i386-any32-linux-musl mips-any32-linux-musl mipsel-any32-linux-musl
 do
     wget -qO- https://github.com/dimkr/toolchains/releases/latest/download/$i.tar.gz | tar -xzf - -C /
-    meson --cross-file=$i --buildtype=release build-$1-$i
+    meson --cross-file=$i -Dcompression=$1 --buildtype=release build-$1-$i
     ninja -C build-$1-$i
     /opt/x-tools/$i/bin/$i-strip -s -R.note -R.comment build-$1-$i/papaw
     install -D -m 755 build-$1-$i/papaw artifacts/papaw-$1-${i%%-*}
