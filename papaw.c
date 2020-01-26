@@ -403,11 +403,11 @@ static char *itoa(char *s, int i)
 {
     if (i > 10)
         s = itoa(s, i / 10);
-    else
-        s[1] = '\0';
 
     *s = '0' + i % 10;
-    return s + 1;
+    ++s;
+    *s = '\0';
+    return s;
 }
 
 struct foot {
