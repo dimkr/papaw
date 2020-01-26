@@ -80,13 +80,13 @@ elif compression == 'zstd'
                       input: 'zstd/contrib/single_file_decoder/zstddeclib-in.c',
                       output: 'zstddeclib.h',
                       command: [
-                          join_paths(meson.source_root(), 'zstd/contrib/single_file_decoder/combine.sh'),
+                          join_paths(meson.current_source_dir(), 'zstd/contrib/single_file_decoder/combine.sh'),
                           '-r',
-                          join_paths(meson.source_root(), 'zstd/lib'),
+                          join_paths(meson.current_source_dir(), 'zstd/lib'),
                           '-r',
-                          join_paths(meson.source_root(), 'zstd/lib/common'),
+                          join_paths(meson.current_source_dir(), 'zstd/lib/common'),
                           '-r',
-                          join_paths(meson.source_root(), 'zstd/lib/decompress'),
+                          join_paths(meson.current_source_dir(), 'zstd/lib/decompress'),
                           '-o',
                           '@OUTPUT@',
                           '@INPUT@'
