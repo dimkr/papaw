@@ -92,7 +92,7 @@ elif compression == 'zstd'
                           '@INPUT@'
                       ])
     ]
-    cfg.set('COMPRESSION_CMD', '"zstd", "-q", "-c", "--ultra", "-22", "--no-check"')
+    cfg.set('COMPRESSION_CMD', '"zstd", "-q", "-c", "-19", "--no-check"')
     cfg.set('DECOMPRESSION_CMD', '"zstd", "-d"')
 elif compression == 'deflate'
     compression_cflags = ['-DPAPAW_DEFLATE']
