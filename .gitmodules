@@ -3,7 +3,7 @@
 	url = https://github.com/richgel999/miniz
 [submodule "xz-embedded"]
 	path = xz-embedded
-	url = https://github.com/dimkr/xz-embedded
+	url = https://git.tukaani.org/xz-embedded.git
 [submodule "zstd"]
 	path = zstd
 	url = https://github.com/facebook/zstd
