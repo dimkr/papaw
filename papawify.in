@@ -38,12 +38,16 @@ cmd = [@COMPRESSION_CMD@]
 if args.uncompressed:
     cmd = ["cat"]
 
-data = subprocess.check_output(cmd + [args.input])
+compressed = subprocess.check_output(cmd + [args.input])
+if args.uncompressed:
+    obfuscated = compressed
+else:
+    obfuscated = @OBFUSCATION@
 
 with open(args.stub, "rb") as infp, open(args.output, "wb") as outfp:
     outfp.write(infp.read())
-    outfp.write(data)
+    outfp.write(obfuscated)
     outfp.write(struct.pack(">L", os.path.getsize(args.input)))
-    outfp.write(struct.pack(">L", len(data)))
+    outfp.write(struct.pack(">L", len(obfuscated)))
 
 os.chmod(args.output, 0o755)

@@ -97,6 +97,12 @@ meson configure build-$1 -Ddir_prefix=$here
 ninja -C build-$1
 test -n "`strace -qqe mkdir ./build-$1/test_putser 2>&1 | grep $here`"
 
+# make sure binwalk fails to identify the payload format
+test `binwalk -M ./build-$1/test_putser | grep 0x | wc -l` -eq 1
+
+# make sure there are no compression-related strings
+test -z "`strings -a ./build-$1/test_putser | grep -i -e lz -e xz -e deflate -e miniz -e zlib -e zstandard -e zstd -e huff -e rle -e copy -e license`"
+
 # make sure there are no file descriptor leaks
 valgrind -q --leak-check=full --error-exitcode=1 --malloc-fill=1 --free-fill=1 --track-fds=yes ./build-$1/test_putser
 
