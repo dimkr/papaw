@@ -53,8 +53,6 @@ static void xfree(void *);
 #   define MZ_MALLOC xalloc
 #   undef MZ_FREE
 #   define MZ_FREE xfree
-#   undef MZ_ASSERT
-#   define MZ_ASSERT(x) do {} while (0)
 
 #   include "miniz/miniz_tinfl.c"
 #   include "miniz/miniz.c"

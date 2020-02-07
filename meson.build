@@ -22,7 +22,7 @@
 
 project('papaw', 'c', version: '0.1', license: 'MIT')
 
-cflags = ['-Os', '-fomit-frame-pointer', '-ffunction-sections', '-fdata-sections', '-fmerge-all-constants']
+cflags = ['-Os', '-fomit-frame-pointer', '-ffunction-sections', '-fdata-sections', '-fmerge-all-constants', '-DNDEBUG']
 ldflags = ['-Wl,--gc-sections', '-Wl,--sort-common', '-Wl,-s']
 
 cc = meson.get_compiler('c')
@@ -62,7 +62,7 @@ endif
 cfg = configuration_data()
 
 compression_sources = []
-compression_cflags = ['-DPAPAW_XZ', '-Wno-unused-function']
+compression_cflags = ['-DPAPAW_XZ']
 compression_includes = [include_directories('xz-embedded/userspace'), include_directories('xz-embedded/linux/include/linux')]
 cfg.set('COMPRESSION_CMD', '"xz", "-c", "--check=none", "--lzma2=preset=9e,dict=512KiB"')
 cfg.set('OBFUSCATION', 'obfuscated = b"\\0\\0\\0\\x08\\0" + compressed[5:-2] + b"\\0\\0"')
