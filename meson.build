@@ -107,7 +107,7 @@ elif compression == 'zstd'
 elif compression == 'deflate'
     compression_cflags = ['-DPAPAW_DEFLATE']
     compression_includes = []
-    cfg.set('COMPRESSION_CMD', '"python3", "-c", "import sys, zlib; o = zlib.compressobj(9, zlib.DEFLATED, -15, 9, zlib.Z_DEFAULT_STRATEGY); o.compress(open(sys.argv[1], \'rb\').read()); sys.stdout.buffer.write(o.flush())"')
+    cfg.set('COMPRESSION_CMD', '"python3", "-c", "import sys, zlib; o = zlib.compressobj(9, zlib.DEFLATED, -15, 9, zlib.Z_DEFAULT_STRATEGY); sys.stdout.buffer.write(o.compress(open(sys.argv[1], \'rb\').read())); sys.stdout.buffer.write(o.flush())"')
     cfg.set('OBFUSCATION', 'compressed')
     cfg.set('DEOBFUSCATION', 'deobfuscated = obfuscated')
     cfg.set('DECOMPRESSION_CMD', '"python3", "-c", "import sys, zlib; sys.stdout.buffer.write(zlib.decompress(sys.stdin.buffer.read(), -15))"')
