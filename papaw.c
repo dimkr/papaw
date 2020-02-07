@@ -46,12 +46,12 @@
 #ifdef PAPAW_DEFLATE
 #   define MINIZ_NO_ARCHIVE_APIS
 
+#   include "miniz/miniz_common.h"
 static void *xalloc(size_t);
 static void xfree(void *);
-#   include "miniz/miniz_common.h"
 #   undef MZ_MALLOC
-#   undef MZ_FREE
 #   define MZ_MALLOC xalloc
+#   undef MZ_FREE
 #   define MZ_FREE xfree
 
 #   include "miniz/miniz_tinfl.c"
@@ -66,6 +66,8 @@ static void xfree(void *);
 #   define FOOTER_MAGIC "\0\0"
 
 #   include "xz-embedded/userspace/xz_config.h"
+static void *xalloc(size_t);
+static void xfree(void *);
 #   undef kmalloc
 #   define kmalloc(size, flags) xalloc(size)
 #   undef kfree
