@@ -157,7 +157,7 @@ static bool extract(const int out,
 #elif defined(PAPAW_ZSTD)
     unsigned char *p;
 #elif defined(PAPAW_DEFLATE)
-    mz_stream strm;
+    mz_stream strm = {0};
     unsigned char *p;
 #endif
     void *map;
@@ -186,9 +186,7 @@ decompress:
         return false;
 
     xzbuf.in = data;
-    xzbuf.in_pos = 0;
     xzbuf.in_size = clen;
-    xzbuf.out_pos = 0;
     xzbuf.out_size = olen;
 
     xz = xz_dec_init(XZ_SINGLE, 0);
