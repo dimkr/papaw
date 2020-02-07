@@ -39,7 +39,10 @@ if args.uncompressed:
     cmd = ["cat"]
 
 compressed = subprocess.check_output(cmd + [args.input])
-obfuscated = @OBFUSCATION@
+if args.uncompressed:
+    obfuscated = compressed
+else:
+    obfuscated = @OBFUSCATION@
 
 with open(args.stub, "rb") as infp, open(args.output, "wb") as outfp:
     outfp.write(infp.read())
