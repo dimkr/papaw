@@ -79,6 +79,9 @@ static void xfree(void *);
 #   include "xz-embedded/linux/lib/xz/xz_dec_lzma2.c"
 #   include "xz-embedded/linux/lib/xz/xz_dec_stream.c"
 #elif defined(PAPAW_LZMA)
+#   include "lzma/C/LzmaDec.h"
+#   undef LZMA_PROPS_SIZE
+#   define LZMA_PROPS_SIZE 6
 #   include "lzma/C/LzmaDec.c"
 #   define LZMA_HEADER_SIZE LZMA_PROPS_SIZE + 8
 #elif defined(PAPAW_ZSTD)

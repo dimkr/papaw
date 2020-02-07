@@ -73,7 +73,7 @@ if compression == 'lzma'
     compression_cflags = ['-DPAPAW_LZMA']
     compression_includes = []
     cfg.set('COMPRESSION_CMD', '"xz", "-c", "--format=lzma", "--lzma1=preset=9e,dict=512KiB"')
-    cfg.set('OBFUSCATION', 'compressed')
+    cfg.set('OBFUSCATION', 'compressed[:5] + b"\\x08" + compressed[5:]')
 elif compression == 'zstd'
     compression_cflags = ['-DPAPAW_ZSTD']
     compression_includes = []
