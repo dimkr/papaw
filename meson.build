@@ -102,7 +102,7 @@ elif compression == 'zstd'
     ]
     cfg.set('COMPRESSION_CMD', '"zstd", "-q", "-c", "-19", "--no-check"')
     cfg.set('OBFUSCATION', 'obfuscated = b"\\x08\\0\\0\\x00" + compressed[4:]')
-    cfg.set('DEOBFUSCATION', 'deobfuscated = b"\\xfd\\x2f\\xb5\\x28" + obfuscated[4:]')
+    cfg.set('DEOBFUSCATION', 'deobfuscated = b"\\x28\\xb5\\x2f\\xfd" + obfuscated[4:]')
     cfg.set('DECOMPRESSION_CMD', '"zstd", "-d"')
 elif compression == 'deflate'
     compression_cflags = ['-DPAPAW_DEFLATE']
