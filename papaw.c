@@ -43,11 +43,7 @@
 #   include <sys/ptrace.h>
 #endif
 
-#ifdef PAPAW_XZ
-#   define MINIZ_NO_ZLIB_APIS
-#endif
-
-#if defined(PAPAW_XZ) || defined(PAPAW_DEFLATE)
+#ifdef PAPAW_DEFLATE
 #   define MINIZ_NO_ARCHIVE_APIS
 
 static void *xalloc(size_t);
@@ -58,15 +54,16 @@ static void xfree(void *);
 #   define MZ_MALLOC xalloc
 #   define MZ_FREE xfree
 
-#   ifdef PAPAW_DEFLATE
-#       include "miniz/miniz_tinfl.c"
-#   endif
-
+#   include "miniz/miniz_tinfl.c"
 #   include "miniz/miniz.c"
-#endif
-
-#ifdef PAPAW_XZ
+#elif defined(PAPAW_XZ)
 #   define XZ_EXTERN static
+
+#   include "xz-embedded/linux/lib/xz/xz_stream.h"
+#   undef HEADER_MAGIC
+#   define HEADER_MAGIC "\0\0\0\x08\0"
+#   undef FOOTER_MAGIC
+#   define FOOTER_MAGIC "\0\0"
 
 #   include "xz-embedded/userspace/xz_config.h"
 #   undef kmalloc
@@ -78,6 +75,7 @@ static void xfree(void *);
 #   undef vfree
 #   define vfree xfree
 
+#   include "xz-embedded/linux/lib/xz/xz_crc32.c"
 #   include "xz-embedded/linux/lib/xz/xz_dec_lzma2.c"
 #   include "xz-embedded/linux/lib/xz/xz_dec_stream.c"
 #elif defined(PAPAW_LZMA)
@@ -91,15 +89,6 @@ static void xfree(void *);
 #   define HUF_FORCE_DECOMPRESS_X1
 #   define MEM_FORCE_MEMORY_ACCESS 0
 #   include "zstddeclib.h"
-#endif
-
-#ifdef PAPAW_XZ
-
-static uint32_t xz_crc32(const uint8_t *buf, size_t size, uint32_t crc)
-{
-    return (uint32_t)mz_crc32((mz_ulong)crc, buf, size);
-}
-
 #endif
 
 #if defined(PAPAW_LZMA) || defined(PAPAW_XZ) || defined(PAPAW_DEFLATE)
@@ -161,8 +150,8 @@ static bool extract(const int out,
 #elif defined(PAPAW_ZSTD)
     unsigned char *p;
 #elif defined(PAPAW_DEFLATE)
+    mz_stream strm;
     unsigned char *p;
-    mz_ulong outlen;
 #endif
     void *map;
 
@@ -200,6 +189,8 @@ decompress:
         munmap(xzbuf.out, (size_t)olen);
         return false;
     }
+
+    xz_crc32_init();
 
     if ((xz_dec_run(xz, &xzbuf) != XZ_STREAM_END) || (xzbuf.out_size != olen)) {
         xz_dec_end(xz);
@@ -254,15 +245,19 @@ decompress:
     return true;
 #elif defined(PAPAW_DEFLATE)
 decompress:
+    if (mz_inflateInit2(&strm, -15) != MZ_OK)
+        return false;
+
     p = mmap(NULL, (size_t)olen, PROT_WRITE, MAP_SHARED, out, 0);
     if (p == MAP_FAILED)
         return false;
 
-    outlen = (mz_ulong)olen;
-    if (mz_uncompress(p,
-                      &outlen,
-                      data,
-                      (mz_ulong)clen) != MZ_OK) {
+    strm.next_in = data;
+    strm.avail_in = clen;
+    strm.next_out = p;
+    strm.avail_out = olen;
+
+    if (mz_inflate(&strm, MZ_FINISH) != MZ_STREAM_END) {
         munmap(p, (size_t)olen);
         return false;
     }

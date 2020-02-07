@@ -65,6 +65,7 @@ compression_sources = []
 compression_cflags = ['-DPAPAW_XZ', '-Wno-unused-function']
 compression_includes = [include_directories('xz-embedded/userspace'), include_directories('xz-embedded/linux/include/linux')]
 cfg.set('COMPRESSION_CMD', '"xz", "-c", "--check=none", "--lzma2=preset=9e,dict=512KiB"')
+cfg.set('OBFUSCATION', 'obfuscated = b"\\0\\0\\0\\x08\\0" + compressed[5:-2] + b"\\0\\0"')
 cfg.set('DECOMPRESSION_CMD', '"xz", "-d"')
 
 compression = get_option('compression')
@@ -72,6 +73,7 @@ if compression == 'lzma'
     compression_cflags = ['-DPAPAW_LZMA']
     compression_includes = []
     cfg.set('COMPRESSION_CMD', '"xz", "-c", "--format=lzma", "--lzma1=preset=9e,dict=512KiB"')
+    cfg.set('OBFUSCATION', 'compressed')
 elif compression == 'zstd'
     compression_cflags = ['-DPAPAW_ZSTD']
     compression_includes = []
@@ -93,11 +95,13 @@ elif compression == 'zstd'
                       ])
     ]
     cfg.set('COMPRESSION_CMD', '"zstd", "-q", "-c", "-19", "--no-check"')
+    cfg.set('OBFUSCATION', 'obfuscated = b"\\0\\0\\0\\x08" + compressed[4:]')
     cfg.set('DECOMPRESSION_CMD', '"zstd", "-d"')
 elif compression == 'deflate'
     compression_cflags = ['-DPAPAW_DEFLATE']
     compression_includes = []
-    cfg.set('COMPRESSION_CMD', '"python3", "-c", "import sys, zlib; sys.stdout.buffer.write(zlib.compress(open(sys.argv[1], \'rb\').read(), 9))"')
+    cfg.set('COMPRESSION_CMD', '"python3", "-c", "import sys, zlib; o = zlib.compressobj(9, zlib.DEFLATED, -15, 9, zlib.Z_DEFAULT_STRATEGY); o.compress(open(sys.argv[1], \'rb\').read()); sys.stdout.buffer.write(o.flush())"')
+    cfg.set('OBFUSCATION', 'compressed')
     cfg.set('DECOMPRESSION_CMD', '"python3", "-c", "import sys, zlib; sys.stdout.buffer.write(zlib.decompress(sys.stdin.buffer.read()))"')
 endif
 
