@@ -66,6 +66,7 @@ compression_cflags = ['-DPAPAW_XZ', '-Wno-unused-function']
 compression_includes = [include_directories('xz-embedded/userspace'), include_directories('xz-embedded/linux/include/linux')]
 cfg.set('COMPRESSION_CMD', '"xz", "-c", "--check=none", "--lzma2=preset=9e,dict=512KiB"')
 cfg.set('OBFUSCATION', 'obfuscated = b"\\0\\0\\0\\x08\\0" + compressed[5:-2] + b"\\0\\0"')
+cfg.set('DEOBFUSCATION', 'deobfuscated = b"\\3757zXZ" + obfuscated[5:-2] + b"YZ"')
 cfg.set('DECOMPRESSION_CMD', '"xz", "-d"')
 
 compression = get_option('compression')
@@ -74,35 +75,42 @@ if compression == 'lzma'
     compression_includes = []
     cfg.set('COMPRESSION_CMD', '"xz", "-c", "--format=lzma", "--lzma1=preset=9e,dict=512KiB"')
     cfg.set('OBFUSCATION', 'compressed[:5] + b"\\x08" + compressed[5:]')
+    cfg.set('DEOBFUSCATION', 'deobfuscated = obfuscated[:5] + obfuscated[6:]')
 elif compression == 'zstd'
     compression_cflags = ['-DPAPAW_ZSTD']
     compression_includes = []
     compression_sources += [
-        custom_target('zstddeclib',
-                      input: 'zstd/contrib/single_file_decoder/zstddeclib-in.c',
-                      output: 'zstddeclib.h',
-                      command: [
-                          join_paths(meson.current_source_dir(), 'zstd/contrib/single_file_decoder/combine.sh'),
-                          '-r',
-                          join_paths(meson.current_source_dir(), 'zstd/lib'),
-                          '-r',
-                          join_paths(meson.current_source_dir(), 'zstd/lib/common'),
-                          '-r',
-                          join_paths(meson.current_source_dir(), 'zstd/lib/decompress'),
-                          '-o',
-                          '@OUTPUT@',
-                          '@INPUT@'
-                      ])
+        custom_target('zstddeclib_obfuscated',
+                      input: custom_target('zstddeclib',
+                                           input: 'zstd/contrib/single_file_decoder/zstddeclib-in.c',
+                                           output: 'zstddeclib.h',
+                                           command: [
+                                               join_paths(meson.current_source_dir(), 'zstd/contrib/single_file_decoder/combine.sh'),
+                                               '-r',
+                                               join_paths(meson.current_source_dir(), 'zstd/lib'),
+                                               '-r',
+                                               join_paths(meson.current_source_dir(), 'zstd/lib/common'),
+                                               '-r',
+                                               join_paths(meson.current_source_dir(), 'zstd/lib/decompress'),
+                                               '-o',
+                                               '@OUTPUT@',
+                                               '@INPUT@'
+                                           ]),
+                      output: 'zstddeclib_obfuscated.h',
+                      command: ['sed', 's/0xFD2FB528/0x00000008/', '@INPUT@'],
+                      capture: true)
     ]
     cfg.set('COMPRESSION_CMD', '"zstd", "-q", "-c", "-19", "--no-check"')
-    cfg.set('OBFUSCATION', 'obfuscated = b"\\0\\0\\0\\x08" + compressed[4:]')
+    cfg.set('OBFUSCATION', 'obfuscated = b"\\x08\\0\\0\\x00" + compressed[4:]')
+    cfg.set('DEOBFUSCATION', 'deobfuscated = b"\\xfd\\x2f\\xb5\\x28" + obfuscated[4:]')
     cfg.set('DECOMPRESSION_CMD', '"zstd", "-d"')
 elif compression == 'deflate'
     compression_cflags = ['-DPAPAW_DEFLATE']
     compression_includes = []
     cfg.set('COMPRESSION_CMD', '"python3", "-c", "import sys, zlib; o = zlib.compressobj(9, zlib.DEFLATED, -15, 9, zlib.Z_DEFAULT_STRATEGY); o.compress(open(sys.argv[1], \'rb\').read()); sys.stdout.buffer.write(o.flush())"')
     cfg.set('OBFUSCATION', 'compressed')
-    cfg.set('DECOMPRESSION_CMD', '"python3", "-c", "import sys, zlib; sys.stdout.buffer.write(zlib.decompress(sys.stdin.buffer.read()))"')
+    cfg.set('DEOBFUSCATION', 'deobfuscated = obfuscated')
+    cfg.set('DECOMPRESSION_CMD', '"python3", "-c", "import sys, zlib; sys.stdout.buffer.write(zlib.decompress(sys.stdin.buffer.read(), -15))"')
 endif
 
 papaw = executable('papaw',

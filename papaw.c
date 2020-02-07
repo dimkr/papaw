@@ -93,7 +93,7 @@ static void xfree(void *);
 #   define ZSTD_FORCE_DECOMPRESS_SEQUENCES_SHORT
 #   define HUF_FORCE_DECOMPRESS_X1
 #   define MEM_FORCE_MEMORY_ACCESS 0
-#   include "zstddeclib.h"
+#   include "zstddeclib_obfuscated.h"
 #endif
 
 #if defined(PAPAW_LZMA) || defined(PAPAW_XZ) || defined(PAPAW_DEFLATE)

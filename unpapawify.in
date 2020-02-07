@@ -37,6 +37,8 @@ with open(sys.argv[1], "rb") as infp:
         xz = subprocess.Popen([@DECOMPRESSION_CMD@],
                               stdin=subprocess.PIPE,
                               stdout=open(sys.argv[2], "wb"))
-        xz.stdin.write(data[-(size + 8):-8])
+        obfuscated = data[-(size + 8):-8]
+        @DEOBFUSCATION@
+        xz.stdin.write(deobfuscated)
         xz.stdin.close()
         xz.wait()
