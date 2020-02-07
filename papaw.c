@@ -147,7 +147,7 @@ static bool extract(const int out,
                     const uint32_t olen)
 {
 #ifdef PAPAW_XZ
-    struct xz_buf xzbuf;
+    struct xz_buf xzbuf = {0};
     struct xz_dec *xz;
 #elif defined(PAPAW_LZMA)
     SizeT inlen = clen - LZMA_HEADER_SIZE, outlen = olen;
