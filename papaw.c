@@ -399,7 +399,7 @@ static bool start_child(const char *dir, const char *path, const uid_t uid)
 
 static char *itoa(char *s, int i)
 {
-    if (i > 10)
+    if (i >= 10)
         s = itoa(s, i / 10);
 
     *s = '0' + i % 10;
