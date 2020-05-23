@@ -28,7 +28,7 @@ do
     ninja -C build-$1-$i test_putser
     /opt/x-tools/$i/bin/$i-strip -s -R.note -R.comment build-$1-$i/papaw
     install -D -m 755 build-$1-$i/papaw artifacts/papaw-$1-${i%%-*}
-    install -D -m 755 build-$1-$i/test_putser artifacts/hello-$1-${i%%-*}
+    install -m 755 build-$1-$i/test_putser artifacts/hello-$1-${i%%-*}
 done
 
 install -m 755 build-$1-arm-any32-linux-musleabi/papawify artifacts/papawify-$1
