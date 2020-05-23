@@ -29,8 +29,8 @@ then
 
     test x`./build-$1/test_putser` = xhello
 
-    # pack /bin/sh and run the CI flow using the packed executable
-    ./build-$1/papawify build-$1/papaw /bin/sh sh-packed-$1
+    # pack the shell and run the CI flow using the packed executable
+    ./build-$1/papawify build-$1/papaw /bin/dash sh-packed-$1
     export LD_PRELOAD=`pwd`/build-$1/libpapaw.so
     exec ./sh-packed-$1 -xe $0 $1
 fi
@@ -74,7 +74,7 @@ test ! -s /proc/$$/exe
 
 # make sure unpacking works
 ./build-$1/unpapawify sh-packed-$1 sh-unpacked-$1
-cmp /bin/sh sh-unpacked-$1
+cmp /bin/dash sh-unpacked-$1
 
 # packed executables can be deleted while running
 rm -f sh-packed-$1
@@ -92,7 +92,7 @@ test x`./build-$1/test_crasher` = x
 test -z "`ls /tmp/core* 2>/dev/null`"
 
 # make sure there are no compression-related strings
-test -z "`strings -a ./build-$1/test_putser | grep -i -e lz -e xz -e deflate -e miniz -e zlib -e zstandard -e zstd -e huff -e rle -e copy -e license -e papaw`"
+test -z "`strings -a ./build-$1/test_putser | grep -i -e $1 -e miniz -e zlib -e zstandard -e zstd -e huff -e rle -e copy -e license -e papaw`"
 
 # the payload should be extracted to dir_prefix
 here=`pwd`
