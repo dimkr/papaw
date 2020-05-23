@@ -24,10 +24,11 @@
 
 for i in arm-any32-linux-musleabi armeb-any32-linux-musleabi i386-any32-linux-musl mips-any32-linux-musl mipsel-any32-linux-musl
 do
-    meson --cross-file=$i -Dcompression=$1 --buildtype=release build-$1-$i
-    ninja -C build-$1-$i
+    meson --cross-file=$i -Dcompression=$1 --buildtype=release -Dci=true build-$1-$i
+    ninja -C build-$1-$i test_putser
     /opt/x-tools/$i/bin/$i-strip -s -R.note -R.comment build-$1-$i/papaw
     install -D -m 755 build-$1-$i/papaw artifacts/papaw-$1-${i%%-*}
+    install -D -m 755 build-$1-$i/test_putser artifacts/hello-$1-${i%%-*}
 done
 
 install -m 755 build-$1-arm-any32-linux-musleabi/papawify artifacts/papawify-$1
