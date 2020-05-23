@@ -82,10 +82,10 @@ elif compression == 'zstd'
     compression_sources += [
         custom_target('zstddeclib_obfuscated',
                       input: custom_target('zstddeclib',
-                                           input: 'zstd/contrib/single_file_decoder/zstddeclib-in.c',
+                                           input: 'zstd/contrib/single_file_libs/zstddeclib-in.c',
                                            output: 'zstddeclib.h',
                                            command: [
-                                               join_paths(meson.current_source_dir(), 'zstd/contrib/single_file_decoder/combine.sh'),
+                                               join_paths(meson.current_source_dir(), 'zstd/contrib/single_file_libs/combine.sh'),
                                                '-r',
                                                join_paths(meson.current_source_dir(), 'zstd/lib'),
                                                '-r',
