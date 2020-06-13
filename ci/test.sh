@@ -92,7 +92,11 @@ test x`./build-$1/test_crasher` = x
 test -z "`ls /tmp/core* 2>/dev/null`"
 
 # make sure there are no compression-related strings
-test -z "`strings -a ./build-$1/test_putser | grep -i -e $1 -e miniz -e zlib -e zstandard -e zstd -e huff -e rle -e copy -e license -e papaw`"
+DESTDIR=out ninja -C build-$1 install
+for i in ./build-$1/out/usr/local/bin/papaw ./build-$1/test_putser
+do
+    test -z "`strings -a $i | grep -i -e $1 -e miniz -e zlib -e zstandard -e zstd -e huff -e rle -e copy -e license -e papaw`"
+done
 
 # the payload should be extracted to dir_prefix
 here=`pwd`

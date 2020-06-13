@@ -86,6 +86,8 @@ static void xfree(void *);
 #   define LZMA_PROPS_SIZE 6
 #   include "lzma/C/LzmaDec.c"
 #   define LZMA_HEADER_SIZE LZMA_PROPS_SIZE + 8
+#elif defined(PAPAW_MINLZMA)
+#   include <minlzma.h>
 #elif defined(PAPAW_ZSTD)
 #   define DYNAMIC_BMI2 0
 #   define ZSTD_NO_INLINE
@@ -152,6 +154,9 @@ static bool extract(const int out,
     unsigned char *p;
     ELzmaStatus status;
     const ISzAlloc alloc = {xalloc, xfree};
+#elif defined(PAPAW_MINLZMA)
+    unsigned char *p;
+    uint32_t dlen;
 #elif defined(PAPAW_ZSTD)
     unsigned char *p;
 #elif defined(PAPAW_DEFLATE)
@@ -163,7 +168,7 @@ static bool extract(const int out,
     if (ftruncate(out, (off_t)olen) < 0)
         return false;
 
-#if defined(PAPAW_XZ) || defined(PAPAW_LZMA) || defined(PAPAW_ZSTD) || defined(PAPAW_DEFLATE)
+#if defined(PAPAW_XZ) || defined(PAPAW_LZMA) || defined(PAPAW_MINLZMA) || defined(PAPAW_ZSTD) || defined(PAPAW_DEFLATE)
     if (clen != olen)
         goto decompress;
 #endif
@@ -224,6 +229,20 @@ decompress:
                     &status,
                     &alloc) != SZ_OK) ||
         (outlen != olen)) {
+        munmap(p, (size_t)olen);
+        return false;
+    }
+
+    munmap(p, (size_t)olen);
+    return true;
+#elif defined(PAPAW_MINLZMA)
+decompress:
+    p = mmap(NULL, (size_t)olen, PROT_WRITE, MAP_SHARED, out, 0);
+    if (p == MAP_FAILED)
+        return false;
+
+    dlen = olen;
+    if (!XzDecode((uint8_t *)data, clen, p, &dlen) || (dlen != olen)) {
         munmap(p, (size_t)olen);
         return false;
     }

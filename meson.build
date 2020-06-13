@@ -62,6 +62,7 @@ endif
 cfg = configuration_data()
 
 compression_sources = []
+compression_dependencies = []
 compression_cflags = ['-DPAPAW_XZ']
 compression_includes = [include_directories('xz-embedded/userspace'), include_directories('xz-embedded/linux/include/linux')]
 cfg.set('COMPRESSION_CMD', '"xz", "-c", "--check=none", "--lzma2=preset=9e,dict=512KiB"')
@@ -76,6 +77,13 @@ if compression == 'lzma'
     cfg.set('COMPRESSION_CMD', '"xz", "-c", "--format=lzma", "--lzma1=preset=9e,dict=512KiB"')
     cfg.set('OBFUSCATION', 'compressed[:5] + b"\\x08" + compressed[5:]')
     cfg.set('DEOBFUSCATION', 'deobfuscated = obfuscated[:5] + obfuscated[6:]')
+elif compression == 'minlzma'
+    compression_cflags = ['-DPAPAW_MINLZMA']
+    cmake = import('cmake')
+    # minlzma doesn't set LANGUAGES, so cmake looks for a C++ compiler although we don't need one
+    minlzma = cmake.subproject('minlzma', cmake_options: ['-DCMAKE_C_FLAGS=@0@ -fvisibility=hidden'.format(' '.join(cflags)), '-DCMAKE_CXX_COMPILER=/bin/true'])
+    compression_includes += include_directories('subprojects/minlzma')
+    compression_dependencies += minlzma.dependency('minlzlib')
 elif compression == 'zstd'
     compression_cflags = ['-DPAPAW_ZSTD']
     compression_includes = []
@@ -117,7 +125,10 @@ papaw = executable('papaw',
                    ['papaw.c'] + compression_sources,
                    include_directories: compression_includes,
                    c_args: cflags + ['-fvisibility=hidden'] + compression_cflags + config_cflags,
-                   link_args: ldflags)
+                   link_args: ldflags,
+                   dependencies: compression_dependencies,
+                   install: true,
+                   install_rpath: '')
 
 papawu = executable('papawu',
                     'papaw.c',

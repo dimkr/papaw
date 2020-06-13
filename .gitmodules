@@ -7,3 +7,6 @@
 [submodule "zstd"]
 	path = zstd
 	url = https://github.com/facebook/zstd
+[submodule "subprojects/minlzma"]
+	path = subprojects/minlzma
+	url = https://github.com/ionescu007/minlzma
