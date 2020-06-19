@@ -87,7 +87,12 @@ static void xfree(void *);
 #   include "lzma/C/LzmaDec.c"
 #   define LZMA_HEADER_SIZE LZMA_PROPS_SIZE + 8
 #elif defined(PAPAW_MINLZMA)
-#   include <minlzma.h>
+#   include "minlzma/minlzlib/dictbuf.c"
+#   include "minlzma/minlzlib/inputbuf.c"
+#   include "minlzma/minlzlib/lzma2dec.c"
+#   include "minlzma/minlzlib/xzstream.c"
+#   include "minlzma/minlzlib/lzmadec.c"
+#   include "minlzma/minlzlib/rangedec.c"
 #elif defined(PAPAW_ZSTD)
 #   define DYNAMIC_BMI2 0
 #   define ZSTD_NO_INLINE
