@@ -40,6 +40,6 @@ do
     unset CFLAGS
     unset LDFLAGS
     . /opt/x-tools/$i/activate
-    /bin/echo -e "#include <stdio.h>\nint main() {puts(\"hello\"); return 0;}" | $i-gcc $CFLAGS -x c -o hello-$i - $LDFLAGS
-    python3 artifacts/papawify-$1 artifacts/papaw-$1-${i%%-*} hello-$i artifacts/hello-$1-${i%%-*}
+    /bin/echo -e "#include <stdio.h>\nint main() {puts(\"hello\"); return 0;}" | $i-gcc $CFLAGS -x c -o artifacts/hello-${i%%-*} - $LDFLAGS
+    python3 artifacts/papawify-$1 artifacts/papaw-$1-${i%%-*} artifacts/hello-${i%%-*} artifacts/hello-$1-${i%%-*}
 done
