@@ -9,4 +9,4 @@
 	url = https://github.com/facebook/zstd
 [submodule "minlzma"]
 	path = minlzma
-	url = https://github.com/ionescu007/minlzma
+	url = https://github.com/dimkr/minlzma
