@@ -22,7 +22,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-for i in arm-any32-linux-musleabi armeb-any32-linux-musleabi i386-any32-linux-musl mips-any32-linux-musl mipsel-any32-linux-musl
+toolchains="arm-any32-linux-musleabi armeb-any32-linux-musleabi i386-any32-linux-musl mips-any32-linux-musl mipsel-any32-linux-musl"
+
+for i in $toolchains
 do
     meson --cross-file=$i -Dcompression=$1 --buildtype=release build-$1-$i
     ninja -C build-$1-$i
@@ -32,3 +34,12 @@ done
 
 install -m 755 build-$1-arm-any32-linux-musleabi/papawify artifacts/papawify-$1
 install -m 755 build-$1-arm-any32-linux-musleabi/unpapawify artifacts/unpapawify-$1
+
+for i in $toolchains
+do
+    unset CFLAGS
+    unset LDFLAGS
+    . /opt/x-tools/$i/activate
+    /bin/echo -e "#include <stdio.h>\nint main() {puts(\"hello\"); return 0;}" | $i-gcc $CFLAGS -x c -o hello-$i - $LDFLAGS
+    python3 artifacts/papawify-$1 artifacts/papaw-$1-${i%%-*} hello-$i artifacts/hello-$1-${i%%-*}
+done
