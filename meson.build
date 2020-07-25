@@ -134,6 +134,8 @@ libpapaw = static_library('papaw',
                           c_args: cflags + ['-D_GNU_SOURCE'],
                           install: true)
 
+papaw_dependency = declare_dependency(include_directories: papaw_includes,
+                                      link_with: libpapaw)
 install_headers('papaw.h')
 
 papawify = configure_file(input: 'papawify.in',
