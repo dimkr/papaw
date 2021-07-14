@@ -1,0 +1,40 @@
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    branches:
+      - master
+
+name: Release
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: LZMA2 Test
+        run: docker run --rm --privileged -w /root/papaw -v `pwd`:/root/papaw ghcr.io/${{ github.repository }}/ci-container ./ci/test.sh xz
+      - name: LZMA2 Build
+        run: docker run --rm --privileged -w /root/papaw -v `pwd`:/root/papaw ghcr.io/${{ github.repository }}/ci-container ./ci/build.sh xz
+      - name: LZMA1 Test
+        run: docker run --rm --privileged -w /root/papaw -v `pwd`:/root/papaw ghcr.io/${{ github.repository }}/ci-container ./ci/test.sh lzma
+      - name: LZMA1 Build
+        run: docker run --rm --privileged -w /root/papaw -v `pwd`:/root/papaw ghcr.io/${{ github.repository }}/ci-container ./ci/build.sh lzma
+      - name: Minimal LZMA Test
+        run: docker run --rm --privileged -w /root/papaw -v `pwd`:/root/papaw ghcr.io/${{ github.repository }}/ci-container ./ci/test.sh minlzma
+      - name: Minimal LZMA Build
+        run: docker run --rm --privileged -w /root/papaw -v `pwd`:/root/papaw ghcr.io/${{ github.repository }}/ci-container ./ci/build.sh minlzma
+      - name: Zstandard Test
+        run: docker run --rm --privileged -w /root/papaw -v `pwd`:/root/papaw ghcr.io/${{ github.repository }}/ci-container ./ci/test.sh zstd
+      - name: Zstandard Build
+        run: docker run --rm --privileged -w /root/papaw -v `pwd`:/root/papaw ghcr.io/${{ github.repository }}/ci-container ./ci/build.sh zstd
+      - name: Deflate Test
+        run: docker run --rm --privileged -w /root/papaw -v `pwd`:/root/papaw ghcr.io/${{ github.repository }}/ci-container ./ci/test.sh deflate
+      - name: Deflate Build
+        run: docker run --rm --privileged -w /root/papaw -v `pwd`:/root/papaw ghcr.io/${{ github.repository }}/ci-container ./ci/build.sh deflate
+
+
