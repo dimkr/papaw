@@ -23,4 +23,4 @@
 FROM ghcr.io/dimkr/containers/c-dev:clang
 
 RUN apt-get -qq update && apt-get -y install binwalk
-RUN for i in arm-any32-linux-musleabi armeb-any32-linux-musleabi mips-any32-linux-musl mipsel-any32-linux-musl i386-any32-linux-musl; do wget -qO- https://github.com/dimkr/toolchains/releases/latest/download/$i.tar.gz | tar -xzf - -C /; done
+RUN for i in x86_64-any64-linux-musl arm-any32-linux-musleabi armeb-any32-linux-musleabi mips-any32-linux-musl mipsel-any32-linux-musl i386-any32-linux-musl; do wget -qO- https://github.com/dimkr/toolchains/releases/latest/download/$i.tar.gz | tar -xzf - -C /; done
