@@ -15,6 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
+          fetch-depth: 0
           submodules: recursive
       - name: LZMA2 Test
         run: docker run --rm --privileged -w /root/papaw -v `pwd`:/root/papaw ghcr.io/${{ github.repository }}/ci-container ./ci/test.sh xz
