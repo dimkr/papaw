@@ -6,7 +6,7 @@
 |_|         |_|
 ```
 
-[![Build Status](https://dev.azure.com/dima0260/papaw/_apis/build/status/dimkr.papaw?branchName=master)](https://dev.azure.com/dima0260/papaw/_build)
+[![Build Status](https://github.com/dimkr/papaw/actions/workflows/release.yml/badge.svg?branch=master)](https://github.com/dimkr/papaw/actions)
 
 ## Overview
 
