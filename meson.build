@@ -1,6 +1,6 @@
 # This file is part of papaw.
 #
-# Copyright (c) 2019, 2020 Dima Krasner
+# Copyright (c) 2019, 2020, 2021 Dima Krasner
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -84,10 +84,10 @@ elif compression == 'zstd'
     compression_sources += [
         custom_target('zstddeclib_obfuscated',
                       input: custom_target('zstddeclib',
-                                           input: 'zstd/contrib/single_file_libs/zstddeclib-in.c',
+                                           input: 'zstd/build/single_file_libs/zstddeclib-in.c',
                                            output: 'zstddeclib.h',
                                            command: [
-                                               join_paths(meson.current_source_dir(), 'zstd/contrib/single_file_libs/combine.sh'),
+                                               join_paths(meson.current_source_dir(), 'zstd/build/single_file_libs/combine.sh'),
                                                '-r',
                                                join_paths(meson.current_source_dir(), 'zstd/lib'),
                                                '-r',

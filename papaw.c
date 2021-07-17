@@ -1,7 +1,7 @@
 /*
  * This file is part of papaw.
  *
- * Copyright (c) 2019, 2020 Dima Krasner
+ * Copyright (c) 2019, 2020, 2021 Dima Krasner
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -96,6 +96,8 @@ static void xfree(void *);
 #elif defined(PAPAW_ZSTD)
 #   define DYNAMIC_BMI2 0
 #   define ZSTD_NO_INLINE
+#   define ZSTD_STRIP_ERROR_STRINGS
+#   define ZSTD_LEGACY_SUPPORT 0
 #   define ZSTDLIB_VISIBILITY
 #   define ZSTD_FORCE_DECOMPRESS_SEQUENCES_SHORT
 #   define HUF_FORCE_DECOMPRESS_X1
