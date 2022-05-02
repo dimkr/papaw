@@ -1,6 +1,6 @@
 # This file is part of papaw.
 #
-# Copyright (c) 2020, 2021 Dima Krasner
+# Copyright (c) 2020, 2021, 2022 Dima Krasner
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,4 +23,4 @@
 FROM ghcr.io/dimkr/containers/c-dev:clang
 
 RUN apt-get -qq update && apt-get -y install binwalk
-RUN for i in x86_64-any64-linux-musl arm-any32-linux-musleabi armeb-any32-linux-musleabi mips-any32-linux-musl mipsel-any32-linux-musl i386-any32-linux-musl; do wget -qO- https://github.com/dimkr/toolchains/releases/latest/download/$i.tar.gz | tar -xzf - -C /; done
+RUN for i in x86_64-any64-linux-musl aarch64-any64-linux-musl arm-any32-linux-musleabi armeb-any32-linux-musleabi mips-any32-linux-musl mipsel-any32-linux-musl i386-any32-linux-musl; do wget -qO- https://github.com/dimkr/toolchains/releases/latest/download/$i.tar.gz | tar -xzf - -C /; done

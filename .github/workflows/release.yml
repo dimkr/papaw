@@ -101,6 +101,15 @@ jobs:
           asset_path: artifacts/hello-deflate-x86_64
           asset_name: hello-deflate-x86_64
           asset_content_type: application/x-executable
+      - name: Upload hello-deflate-aarch64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: artifacts/hello-deflate-aarch64
+          asset_name: hello-deflate-aarch64
+          asset_content_type: application/x-executable
       - name: Upload hello-deflate-mips
         uses: actions/upload-release-asset@v1
         env:
@@ -137,6 +146,15 @@ jobs:
           asset_path: artifacts/hello-x86_64
           asset_name: hello-x86_64
           asset_content_type: application/x-executable
+      - name: Upload hello-aarch64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: artifacts/hello-aarch64
+          asset_name: hello-aarch64
+          asset_content_type: application/x-executable
       - name: Upload hello-lzma-arm
         uses: actions/upload-release-asset@v1
         env:
@@ -172,6 +190,15 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
           asset_path: artifacts/hello-lzma-x86_64
           asset_name: hello-lzma-x86_64
+          asset_content_type: application/x-executable
+      - name: Upload hello-lzma-aarch64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: artifacts/hello-lzma-aarch64
+          asset_name: hello-lzma-aarch64
           asset_content_type: application/x-executable
       - name: Upload hello-lzma-mips
         uses: actions/upload-release-asset@v1
@@ -226,6 +253,15 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
           asset_path: artifacts/hello-minlzma-x86_64
           asset_name: hello-minlzma-x86_64
+          asset_content_type: application/x-executable
+      - name: Upload hello-minlzma-aarch64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: artifacts/hello-minlzma-aarch64
+          asset_name: hello-minlzma-aarch64
           asset_content_type: application/x-executable
       - name: Upload hello-minlzma-mips
         uses: actions/upload-release-asset@v1
@@ -299,6 +335,15 @@ jobs:
           asset_path: artifacts/hello-xz-x86_64
           asset_name: hello-xz-x86_64
           asset_content_type: application/x-executable
+      - name: Upload hello-xz-aarch64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: artifacts/hello-xz-aarch64
+          asset_name: hello-xz-aarch64
+          asset_content_type: application/x-executable
       - name: Upload hello-xz-mips
         uses: actions/upload-release-asset@v1
         env:
@@ -352,6 +397,15 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
           asset_path: artifacts/hello-zstd-x86_64
           asset_name: hello-zstd-x86_64
+          asset_content_type: application/x-executable
+      - name: Upload hello-zstd-aarch64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: artifacts/hello-zstd-aarch64
+          asset_name: hello-zstd-aarch64
           asset_content_type: application/x-executable
       - name: Upload hello-zstd-mips
         uses: actions/upload-release-asset@v1
@@ -407,6 +461,15 @@ jobs:
           asset_path: artifacts/papaw-deflate-x86_64
           asset_name: papaw-deflate-x86_64
           asset_content_type: application/x-executable
+      - name: Upload papaw-deflate-aarch64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: artifacts/papaw-deflate-aarch64
+          asset_name: papaw-deflate-aarch64
+          asset_content_type: application/x-executable
       - name: Upload papaw-deflate-mips
         uses: actions/upload-release-asset@v1
         env:
@@ -460,6 +523,15 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
           asset_path: artifacts/papaw-lzma-x86_64
           asset_name: papaw-lzma-x86_64
+          asset_content_type: application/x-executable
+      - name: Upload papaw-lzma-aarch64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: artifacts/papaw-lzma-aarch64
+          asset_name: papaw-lzma-aarch64
           asset_content_type: application/x-executable
       - name: Upload papaw-lzma-mips
         uses: actions/upload-release-asset@v1
@@ -515,6 +587,15 @@ jobs:
           asset_path: artifacts/papaw-minlzma-x86_64
           asset_name: papaw-minlzma-x86_64
           asset_content_type: application/x-executable
+      - name: Upload papaw-minlzma-aarch64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: artifacts/papaw-minlzma-aarch64
+          asset_name: papaw-minlzma-aarch64
+          asset_content_type: application/x-executable
       - name: Upload papaw-minlzma-mips
         uses: actions/upload-release-asset@v1
         env:
@@ -569,6 +650,15 @@ jobs:
           asset_path: artifacts/papaw-xz-x86_64
           asset_name: papaw-xz-x86_64
           asset_content_type: application/x-executable
+      - name: Upload papaw-xz-aarch64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: artifacts/papaw-xz-aarch64
+          asset_name: papaw-xz-aarch64
+          asset_content_type: application/x-executable
       - name: Upload papaw-xz-mips
         uses: actions/upload-release-asset@v1
         env:
@@ -622,6 +712,15 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
           asset_path: artifacts/papaw-zstd-x86_64
           asset_name: papaw-zstd-x86_64
+          asset_content_type: application/x-executable
+      - name: Upload papaw-zstd-aarch64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: artifacts/papaw-zstd-aarch64
+          asset_name: papaw-zstd-aarch64
           asset_content_type: application/x-executable
       - name: Upload papaw-zstd-mips
         uses: actions/upload-release-asset@v1
