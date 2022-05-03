@@ -17,6 +17,8 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+      - name: Change ownership
+        run: sudo chown -R root:root .
       - name: LZMA2 Test
         run: docker run --rm --privileged -w /root/papaw -v `pwd`:/root/papaw ghcr.io/${{ github.repository }}/ci-container ./ci/test.sh xz
       - name: LZMA2 Build
