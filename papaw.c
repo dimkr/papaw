@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+#define _GNU_SOURCE
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -448,15 +449,17 @@ int main(int argc, char *argv[])
 #ifndef PAPAW_ALLOW_COREDUMPS
     struct rlimit lim;
 #endif
-    int self, wr, r = -1;
+    int self, wr, r = -1, memfd = -1;
     void *p;
     struct foot *lens;
+    char *end;
     size_t off;
     ssize_t out;
     size_t len;
     uint32_t clen, olen;
     bool ok;
     const char *prog;
+    pid_t pid;
     uid_t uid;
 
 #ifndef PAPAW_ALLOW_COREDUMPS
@@ -483,9 +486,24 @@ int main(int argc, char *argv[])
     if (setenv("   ", exe, 1) < 0)
         return EXIT_FAILURE;
 
+    pid = getpid();
+
+    memfd = memfd_create("", MFD_CLOEXEC);
+    if (memfd >= 0) {
+        memcpy(path, "/proc/", sizeof("/proc/") - 1);
+        end = itoa(path + sizeof("/proc/") - 1, (int)pid);
+        memcpy(end, "/fd/", sizeof("/fd/") - 1);
+        itoa(end + sizeof("/fd/") - 1, memfd);
+        if (setenv("    ", path, 1) < 0) {
+            close(memfd);
+            return EXIT_FAILURE;
+        }
+        goto child;
+    }
+
     /* create a directory */
     memcpy(dir, PAPAW_PREFIX"/.", sizeof(PAPAW_PREFIX"/.") - 1);
-    len = itoa(dir + sizeof(PAPAW_PREFIX"/.") - 1, (int)(getpid() % INT_MAX)) - dir;
+    len = itoa(dir + sizeof(PAPAW_PREFIX"/.") - 1, (int)(pid % INT_MAX)) - dir;
     if (mkdir(dir, 0700) < 0)
         return EXIT_FAILURE;
 
@@ -505,6 +523,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+child:
     uid = geteuid();
 
     /*
@@ -512,23 +531,33 @@ int main(int argc, char *argv[])
      * executable after execv()
      */
     if (!start_child(dir, path, uid)) {
-        rmdir(dir);
+        if (memfd < 0)
+            rmdir(dir);
+        else
+            close(memfd);
         return EXIT_FAILURE;
     }
 
     /* map the executable to memory */
     self = open(exe, O_RDONLY);
-    if (self < 0)
+    if (self < 0) {
+        if (memfd >= 0)
+            close(memfd);
         return EXIT_FAILURE;
+    }
 
     if ((fstat(self, &stbuf) < 0) || (stbuf.st_size <= sizeof(*lens))) {
         close(self);
+        if (memfd >= 0)
+            close(memfd);
         return EXIT_FAILURE;
     }
 
     p = mmap(NULL, (size_t)stbuf.st_size, PROT_READ, MAP_PRIVATE, self, 0);
     if (p == MAP_FAILED) {
         close(self);
+        if (memfd >= 0)
+            close(memfd);
         return EXIT_FAILURE;
     }
 
@@ -549,7 +578,14 @@ int main(int argc, char *argv[])
         (olen > SSIZE_MAX)) {
         munmap(p, (size_t)stbuf.st_size);
         close(self);
+        if (memfd >= 0)
+            close(memfd);
         return EXIT_FAILURE;
+    }
+
+    if (memfd >= 0) {
+       wr = memfd;
+       goto extract;
     }
 
     /* mount a tmpfs on it */
@@ -605,26 +641,35 @@ int main(int argc, char *argv[])
         rmdir(dir);
     }
 
+extract:
     /* decompress and extract the executable to the file */
     ok = extract(wr, clen, p + off - clen, olen);
 
     munmap(p, (size_t)stbuf.st_size);
     close(self);
-    close(wr);
+    if (memfd < 0)
+        close(wr);
 
     if (!ok) {
-        if (uid == 0)
-            close(r);
-        else if (unlink(path) == 0)
-            rmdir(dir);
+        if (memfd < 0) {
+            if (uid == 0)
+                close(r);
+            else if (unlink(path) == 0)
+                rmdir(dir);
+        } else
+            close(memfd);
         return EXIT_FAILURE;
     }
+
+    if (memfd < 0)
+        goto exec;
 
     if (uid == 0) {
         memcpy(path, "/proc/self/fd/", sizeof("/proc/self/fd/") - 1);
         itoa(path + sizeof("/proc/self/fd/") - 1, r);
     }
 
+exec:
     execv(path, argv);
 
     return EXIT_FAILURE;

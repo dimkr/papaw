@@ -1,6 +1,6 @@
 # This file is part of papaw.
 #
-# Copyright (c) 2019, 2020, 2021 Dima Krasner
+# Copyright (c) 2019, 2020, 2021, 2022 Dima Krasner
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-project('papaw', 'c', version: '0.1', license: 'MIT')
+project('papaw', 'c', version: '0.2', license: 'MIT')
 
 cflags = ['-Os', '-fomit-frame-pointer', '-ffunction-sections', '-fdata-sections', '-fmerge-all-constants', '-DNDEBUG']
 ldflags = ['-Wl,--gc-sections', '-Wl,--sort-common', '-Wl,-s']
