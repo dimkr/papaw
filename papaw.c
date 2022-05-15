@@ -661,7 +661,7 @@ extract:
         return EXIT_FAILURE;
     }
 
-    if (memfd < 0)
+    if (memfd >= 0)
         goto exec;
 
     if (uid == 0) {
