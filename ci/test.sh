@@ -2,7 +2,7 @@
 
 # This file is part of papaw.
 #
-# Copyright (c) 2019 Dima Krasner
+# Copyright (c) 2019, 2022 Dima Krasner
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -102,7 +102,7 @@ done
 here=`pwd`
 meson configure build-$1 -Ddir_prefix=$here
 ninja -C build-$1
-test -n "`strace -qqe mkdir ./build-$1/test_putser 2>&1 | grep $here`"
+test -z "`strace -qqe mkdir ./build-$1/test_putser 2>&1 | grep -v $here`"
 
 # make sure binwalk fails to identify the payload format
 test `binwalk -M ./build-$1/test_putser | grep 0x | wc -l` -eq 1
