@@ -71,7 +71,10 @@ static void papaw_do_hide_exe(const char *self, const bool should_truncate)
          * name is changed from basename to "3"
          */
 #ifdef HAVE_PRCTL
-        prctl(PR_SET_NAME, selfbase);
+        if (strncmp(selfbase, "memfd:", sizeof("memfd:") - 1) == 0)
+            prctl(PR_SET_NAME, &selfbase[sizeof("memfd:") - 1]);
+        else
+            prctl(PR_SET_NAME, selfbase);
 #endif
     }
 

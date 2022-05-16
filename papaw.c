@@ -488,12 +488,17 @@ int main(int argc, char *argv[])
 
     pid = getpid();
 
-    memfd = memfd_create("", MFD_CLOEXEC);
+    prog = strrchr(argv[0], '/');
+    if (prog)
+        ++prog;
+    else
+        prog = argv[0];
+
+    memfd = memfd_create(prog, MFD_CLOEXEC);
     if (memfd >= 0) {
-        memcpy(path, "/proc/", sizeof("/proc/") - 1);
-        end = itoa(path + sizeof("/proc/") - 1, (int)pid);
-        memcpy(end, "/fd/", sizeof("/fd/") - 1);
-        itoa(end + sizeof("/fd/") - 1, memfd);
+        memcpy(path, "/memfd:", sizeof("/memfd:") - 1);
+        strncpy(path + sizeof("/memfd:") - 1, prog, sizeof(path) - sizeof("/memfd:") - 1);
+        path[sizeof(path) - 1] = '\0';
         if (setenv("    ", path, 1) < 0) {
             close(memfd);
             return EXIT_FAILURE;
@@ -506,12 +511,6 @@ int main(int argc, char *argv[])
     len = itoa(dir + sizeof(PAPAW_PREFIX"/.") - 1, (int)(pid % INT_MAX)) - dir;
     if (mkdir(dir, 0700) < 0)
         return EXIT_FAILURE;
-
-    prog = strrchr(argv[0], '/');
-    if (prog)
-        ++prog;
-    else
-        prog = argv[0];
 
     memcpy(path, dir, len);
     path[len] = '/';
@@ -661,15 +660,16 @@ extract:
         return EXIT_FAILURE;
     }
 
-    if (memfd >= 0)
-        goto exec;
-
-    if (uid == 0) {
+    if (memfd >= 0) {
+        memcpy(path, "/proc/", sizeof("/proc/") - 1);
+        end = itoa(path + sizeof("/proc/") - 1, (int)pid);
+        memcpy(end, "/fd/", sizeof("/fd/") - 1);
+        itoa(end + sizeof("/fd/") - 1, memfd);
+    } else if (uid == 0) {
         memcpy(path, "/proc/self/fd/", sizeof("/proc/self/fd/") - 1);
         itoa(path + sizeof("/proc/self/fd/") - 1, r);
     }
 
-exec:
     execv(path, argv);
 
     return EXIT_FAILURE;
